@@ -259,6 +259,7 @@ void sixtop_addCells(open_addr_t* neighbor, uint16_t numCells){
    opentimers_restart(sixtop_vars.timeoutTimerId);
 }
 
+
 void sixtop_removeCell(open_addr_t* neighbor){
    OpenQueueEntry_t* pkt;
    bool              outcome;
@@ -960,11 +961,11 @@ void sixtop_six2six_sendDone(OpenQueueEntry_t* msg, owerror_t error){
          if (error == E_SUCCESS && numOfCells > 0){
              for (i=0;i<numOfCells;i++){
                //TimeSlot 2B
-               cellList[i].tsNum       = (*(ptr))<<8;
-               cellList[i].tsNum      |= *(ptr+1);
+               cellList[i].tsNum       = (*(ptr));
+               cellList[i].tsNum      |= (*(ptr+1))<<8;
                //Ch.Offset 2B
-               cellList[i].choffset    = (*(ptr+2))<<8;
-               cellList[i].choffset   |= *(ptr+3);
+               cellList[i].choffset    = (*(ptr+2));
+               cellList[i].choffset   |= (*(ptr+3))<<8;
                //LinkOption bitmap 1B
                cellList[i].linkoptions = *(ptr+4);
                ptr += 5;
@@ -1198,8 +1199,13 @@ void sixtop_notifyReceiveLinkRequest(
       schedule_ie->frameID != bandwidth_ie->slotframeID               ||
       sixtop_areAvailableCellsToBeScheduled(frameID,
                                             numOfcells,
-                                            schedule_ie->cellList, 
+                                            schedule_ie->cellList,
                                             bw) == FALSE){
+      if(sixtop_areAvailableCellsToBeScheduled(frameID,
+                                            numOfcells,
+                                            schedule_ie->cellList,
+                                            bw) == FALSE){
+      }
       scheduleCellSuccess = FALSE;
    } else {
       scheduleCellSuccess = TRUE;
@@ -1512,12 +1518,12 @@ bool sixtop_areAvailableCellsToBeScheduled(
    i          = 0;
    bw         = bandwidth;
    available  = FALSE;
-  
+
    if(bw == 0 || bw>SCHEDULEIEMAXNUMCELLS || numOfCells>SCHEDULEIEMAXNUMCELLS){
       // log wrong parameter error TODO
-    
       available = FALSE;
    } else {
+
       do {
          if(schedule_isSlotOffsetAvailable(cellList[i].tsNum) == TRUE){
             bw--;

@@ -234,6 +234,49 @@ owerror_t openserial_printCritical(uint8_t calling_component, uint8_t error_code
    );
 }
 
+owerror_t openserial_printMessage(uint8_t* buffer, uint8_t length) {
+   uint8_t  i;
+   uint8_t  asn[5];
+   INTERRUPT_DECLARATION();
+
+   // retrieve ASN
+   ieee154e_getAsn(asn);// byte01,byte23,byte4
+
+   DISABLE_INTERRUPTS();
+   openserial_vars.outputBufFilled  = TRUE;
+   outputHdlcOpen();
+   outputHdlcWrite(SERFRAME_MOTE2PC_MESSAGE);
+   outputHdlcWrite(idmanager_getMyID(ADDR_16B)->addr_16b[1]);
+   outputHdlcWrite(idmanager_getMyID(ADDR_16B)->addr_16b[0]);
+   outputHdlcWrite(asn[0]);
+   outputHdlcWrite(asn[1]);
+   outputHdlcWrite(asn[2]);
+   outputHdlcWrite(asn[3]);
+   outputHdlcWrite(asn[4]);
+   for (i=0;i<length;i++){
+      outputHdlcWrite(buffer[i]);
+   }
+   outputHdlcClose();
+   ENABLE_INTERRUPTS();
+
+   return E_SUCCESS;
+}
+/**
+Inserts a hexadecimal buffer represented in bytes in the message. The hex value
+is enclosed by '%'.
+**/
+void openserial_messagePutHexBuffer(uint8_t * message,int position, uint8_t * hex, int lenght){
+   *(message+position)='%';
+   memcpy(message+position+1,hex,lenght);
+   *(message+position+lenght+1)='%';
+}
+
+void openserial_messagePutHex(uint8_t * message,int position, uint8_t hex){
+   *(message+position)='%';
+   *(message+position+1)=hex;
+   *(message+position+2)='%';
+}
+
 void openserial_board_reset_cb(opentimer_id_t id) {
    board_reset();
 }

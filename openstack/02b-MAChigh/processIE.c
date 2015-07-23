@@ -12,7 +12,6 @@
 #include "packetfunctions.h"
 
 //=========================== variables =======================================
-
 //=========================== public ==========================================
 
 port_INLINE void processIE_prependMLMEIE(

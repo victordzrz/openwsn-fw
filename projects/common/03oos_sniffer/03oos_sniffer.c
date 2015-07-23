@@ -16,9 +16,9 @@
 //=========================== defines =========================================
 
 #define LENGTH_PACKET   125+LENGTH_CRC ///< maximum length is 127 bytes
-#define CHANNEL         20             ///< 20=2.450GHz
+#define CHANNEL         0             ///< 20=2.450GHz
 #define ID              0x99           ///< byte sent in the packets
-#define TIMER_PERIOD    0x1fff         
+#define TIMER_PERIOD    0x1fff
 
 //=========================== variables =======================================
 

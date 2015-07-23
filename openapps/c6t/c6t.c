@@ -1,5 +1,4 @@
-/**
-\brief CoAP 6top application.
+/** \brief CoAP 6top application.
 
 \author Xavi Vilajosana <xvilajosana@eecs.berkeley.edu>, February 2013.
 \author Thomas Watteyne <watteyne@eecs.berkeley.edu>, July 2014
@@ -11,8 +10,9 @@
 #include "idmanager.h"
 #include "openqueue.h"
 #include "neighbors.h"
-
+#include "string.h"
 //=========================== defines =========================================
+#define space_conc(str1,str2) #str1 " " #str2
 
 const uint8_t c6t_path0[] = "6t";
 
@@ -88,7 +88,8 @@ owerror_t c6t_receive(
             coap_header->Code          = COAP_CODE_RESP_PRECONDFAILED;
             break;
          }
-         
+
+
          sixtop_setHandler(SIX_HANDLER_OTF);
          // call sixtop
          sixtop_addCells(

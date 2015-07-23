@@ -22,8 +22,11 @@
 ieee154e_vars_t    ieee154e_vars;
 ieee154e_stats_t   ieee154e_stats;
 ieee154e_dbg_t     ieee154e_dbg;
+uint8_t ieee154e_message[20];
 
 //=========================== prototypes ======================================
+
+void ieee154e_printFreq(uint8_t freq);
 
 // SYNCHRONIZING
 void     activity_synchronize_newSlot(void);
@@ -111,8 +114,8 @@ void ieee154e_init() {
    // initialize variables
    memset(&ieee154e_vars,0,sizeof(ieee154e_vars_t));
    memset(&ieee154e_dbg,0,sizeof(ieee154e_dbg_t));
-   
-   ieee154e_vars.singleChannel     = SYNCHRONIZING_CHANNEL;
+
+   ieee154e_vars.singleChannel     = 0;
    ieee154e_vars.isAckEnabled      = TRUE;
    ieee154e_vars.isSecurityEnabled = FALSE;
    // default hopping template
@@ -976,11 +979,14 @@ port_INLINE void activity_ti2() {
    packetfunctions_reserveFooterSize(&ieee154e_vars.localCopyForTransmission, 2);
    
    // calculate the frequency to transmit on
-   ieee154e_vars.freq = calculateFrequency(schedule_getChannelOffset()); 
-   
+   ieee154e_vars.freq = calculateFrequency(schedule_getChannelOffset());
+
+   ieee154e_printFreq(ieee154e_vars.asnOffset);
+   ieee154e_printFreq(ieee154e_vars.freq);
+
    // configure the radio for that frequency
    radio_setFrequency(ieee154e_vars.freq);
-   
+
    // load the packet in the radio's Tx buffer
    radio_loadPacket(ieee154e_vars.localCopyForTransmission.payload,
                     ieee154e_vars.localCopyForTransmission.length);
@@ -1761,7 +1767,6 @@ port_INLINE bool isValidAck(ieee802154_header_iht* ieee802514_header, OpenQueueE
 
 port_INLINE void incrementAsnOffset() {
    frameLength_t frameLength;
-   
    // increment the asn
    ieee154e_vars.asn.bytes0and1++;
    if (ieee154e_vars.asn.bytes0and1==0) {
@@ -2236,4 +2241,11 @@ void endSlot() {
 
 bool ieee154e_isSynch(){
    return ieee154e_vars.isSync;
+}
+
+void ieee154e_printFreq(uint8_t freq){
+  memcpy(ieee154e_message,"f%0%",4);
+  openserial_messagePutHex(ieee154e_message,1,freq);
+  openserial_printMessage(ieee154e_message,4);
+
 }
