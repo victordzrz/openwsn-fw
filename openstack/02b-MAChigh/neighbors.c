@@ -5,6 +5,7 @@
 #include "idmanager.h"
 #include "openserial.h"
 #include "IEEE802154E.h"
+#include "sixtop.h"
 
 //=========================== variables =======================================
 
@@ -32,10 +33,10 @@ bool isThisRowMatching(
 \brief Initializes this module.
 */
 void neighbors_init() {
-   
+
    // clear module variables
    memset(&neighbors_vars,0,sizeof(neighbors_vars_t));
-   
+
    // set myDAGrank
    if (idmanager_getIsDAGroot()==TRUE) {
       neighbors_vars.myDAGrank=MINHOPRANKINCREASE;
@@ -63,7 +64,7 @@ dagrank_t neighbors_getMyDAGrank() {
 uint8_t neighbors_getNumNeighbors() {
    uint8_t i;
    uint8_t returnVal;
-   
+
    returnVal=0;
    for (i=0;i<MAXNUMNEIGHBORS;i++) {
       if (neighbors_vars.neighbors[i].used==TRUE) {
@@ -84,14 +85,14 @@ bool neighbors_getPreferredParentEui64(open_addr_t* addressToWrite) {
    uint8_t   numNeighbors;
    dagrank_t minRankVal;
    uint8_t   minRankIdx;
-   
+
    addressToWrite->type = ADDR_NONE;
-   
+
    foundPreferred       = FALSE;
    numNeighbors         = 0;
    minRankVal           = MAXDAGRANK;
    minRankIdx           = MAXNUMNEIGHBORS+1;
-   
+
    //===== step 1. Try to find preferred parent
    for (i=0; i<MAXNUMNEIGHBORS; i++) {
       if (neighbors_vars.neighbors[i].used==TRUE){
@@ -108,7 +109,7 @@ bool neighbors_getPreferredParentEui64(open_addr_t* addressToWrite) {
          numNeighbors++;
       }
    }
-   
+
    //===== step 2. (backup) Promote neighbor with min rank to preferred parent
    if (foundPreferred==FALSE && numNeighbors > 0){
       // promote neighbor
@@ -118,9 +119,9 @@ bool neighbors_getPreferredParentEui64(open_addr_t* addressToWrite) {
       // return its address
       memcpy(addressToWrite,&(neighbors_vars.neighbors[minRankIdx].addr_64b),sizeof(open_addr_t));
       addressToWrite->type=ADDR_64B;
-      foundPreferred=TRUE;         
+      foundPreferred=TRUE;
    }
-   
+
    return foundPreferred;
 }
 
@@ -143,11 +144,11 @@ open_addr_t* neighbors_getKANeighbor(uint16_t kaPeriod) {
    uint16_t        timeSinceHeard;
    open_addr_t*    addrPreferred;
    open_addr_t*    addrOther;
-   
+
    // initialize
    addrPreferred = NULL;
    addrOther     = NULL;
-   
+
    // scan through the neighbor table, and populate addrPreferred and addrOther
    for (i=0;i<MAXNUMNEIGHBORS;i++) {
       if (neighbors_vars.neighbors[i].used==1) {
@@ -165,7 +166,7 @@ open_addr_t* neighbors_getKANeighbor(uint16_t kaPeriod) {
          }
       }
    }
-   
+
    // return the EUI64 of the most urgent KA to send:
    // - if available, preferred parent
    // - if not, non-preferred parent
@@ -192,10 +193,10 @@ bool neighbors_isStableNeighbor(open_addr_t* address) {
    open_addr_t temp_addr_64b;
    open_addr_t temp_prefix;
    bool        returnVal;
-   
+
    // by default, not stable
    returnVal  = FALSE;
-   
+
    // but neighbor's IPv6 address in prefix and EUI64
    switch (address->type) {
       case ADDR_128B:
@@ -207,7 +208,7 @@ bool neighbors_isStableNeighbor(open_addr_t* address) {
                                (errorparameter_t)0);
          return returnVal;
    }
-   
+
    // iterate through neighbor table
    for (i=0;i<MAXNUMNEIGHBORS;i++) {
       if (isThisRowMatching(&temp_addr_64b,i) && neighbors_vars.neighbors[i].stableNeighbor==TRUE) {
@@ -215,7 +216,7 @@ bool neighbors_isStableNeighbor(open_addr_t* address) {
          break;
       }
    }
-   
+
    return returnVal;
 }
 
@@ -229,13 +230,13 @@ bool neighbors_isStableNeighbor(open_addr_t* address) {
 bool neighbors_isPreferredParent(open_addr_t* address) {
    uint8_t i;
    bool    returnVal;
-   
+
    INTERRUPT_DECLARATION();
    DISABLE_INTERRUPTS();
-   
+
    // by default, not preferred
    returnVal = FALSE;
-   
+
    // iterate through neighbor table
    for (i=0;i<MAXNUMNEIGHBORS;i++) {
       if (isThisRowMatching(address,i) && neighbors_vars.neighbors[i].parentPreference==MAXPREFERENCE) {
@@ -243,7 +244,7 @@ bool neighbors_isPreferredParent(open_addr_t* address) {
          break;
       }
    }
-   
+
    ENABLE_INTERRUPTS();
    return returnVal;
 }
@@ -257,14 +258,14 @@ bool neighbors_isPreferredParent(open_addr_t* address) {
 */
 bool neighbors_isNeighborWithLowerDAGrank(uint8_t index) {
    bool    returnVal;
-   
+
    if (neighbors_vars.neighbors[index].used==TRUE &&
-       neighbors_vars.neighbors[index].DAGrank < neighbors_getMyDAGrank()) { 
+       neighbors_vars.neighbors[index].DAGrank < neighbors_getMyDAGrank()) {
       returnVal = TRUE;
    } else {
       returnVal = FALSE;
    }
-   
+
    return returnVal;
 }
 
@@ -278,14 +279,14 @@ bool neighbors_isNeighborWithLowerDAGrank(uint8_t index) {
 */
 bool neighbors_isNeighborWithHigherDAGrank(uint8_t index) {
    bool    returnVal;
-   
+
    if (neighbors_vars.neighbors[index].used==TRUE &&
-       neighbors_vars.neighbors[index].DAGrank >= neighbors_getMyDAGrank()) { 
+       neighbors_vars.neighbors[index].DAGrank >= neighbors_getMyDAGrank()) {
       returnVal = TRUE;
    } else {
       returnVal = FALSE;
    }
-   
+
    return returnVal;
 }
 
@@ -319,15 +320,15 @@ void neighbors_indicateRx(open_addr_t* l2_src,
                           uint8_t      joinPrio) {
    uint8_t i;
    bool    newNeighbor;
-   
+
    // update existing neighbor
    newNeighbor = TRUE;
    for (i=0;i<MAXNUMNEIGHBORS;i++) {
       if (isThisRowMatching(l2_src,i)) {
-         
+
          // this is not a new neighbor
          newNeighbor = FALSE;
-         
+
          // update numRx, rssi, asn
          neighbors_vars.neighbors[i].numRx++;
          neighbors_vars.neighbors[i].rssi=rssi;
@@ -336,7 +337,7 @@ void neighbors_indicateRx(open_addr_t* l2_src,
          if (joinPrioPresent==TRUE){
             neighbors_vars.neighbors[i].joinPrio=joinPrio;
          }
-         
+
          // update stableNeighbor, switchStabilityCounter
          if (neighbors_vars.neighbors[i].stableNeighbor==FALSE) {
             if (neighbors_vars.neighbors[i].rssi>BADNEIGHBORMAXRSSI) {
@@ -359,12 +360,12 @@ void neighbors_indicateRx(open_addr_t* l2_src,
                neighbors_vars.neighbors[i].switchStabilityCounter=0;
             }
          }
-         
+
          // stop looping
          break;
       }
    }
-   
+
    // register new neighbor
    if (newNeighbor==TRUE) {
       registerNewNeighbor(l2_src, rssi, asnTs, joinPrioPresent,joinPrio);
@@ -398,20 +399,20 @@ void neighbors_indicateTx(open_addr_t* l2_dest,
    if (packetfunctions_isBroadcastMulticast(l2_dest)==TRUE) {
       return;
    }
-   
+
    // loop through neighbor table
    for (i=0;i<MAXNUMNEIGHBORS;i++) {
       if (isThisRowMatching(l2_dest,i)) {
          // handle roll-over case
-        
+
           if (neighbors_vars.neighbors[i].numTx>(0xff-numTxAttempts)) {
               neighbors_vars.neighbors[i].numWraps++; //counting the number of times that tx wraps.
               neighbors_vars.neighbors[i].numTx/=2;
               neighbors_vars.neighbors[i].numTxACK/=2;
            }
          // update statistics
-        neighbors_vars.neighbors[i].numTx += numTxAttempts; 
-        
+        neighbors_vars.neighbors[i].numTx += numTxAttempts;
+
         if (was_finally_acked==TRUE) {
             neighbors_vars.neighbors[i].numTxACK++;
             memcpy(&neighbors_vars.neighbors[i].asn,asnTs,sizeof(asn_t));
@@ -436,10 +437,10 @@ The fields which are updated are:
 void neighbors_indicateRxDIO(OpenQueueEntry_t* msg) {
    uint8_t          i;
    uint8_t          temp_8b;
-  
+
    // take ownership over the packet
    msg->owner = COMPONENT_NEIGHBORS;
-   
+
    // update rank of that neighbor in table
    neighbors_vars.dio = (icmpv6rpl_dio_ht*)(msg->payload);
    // retrieve rank
@@ -463,9 +464,9 @@ void neighbors_indicateRxDIO(OpenQueueEntry_t* msg) {
             break;
          }
       }
-   } 
+   }
    // update my routing information
-   neighbors_updateMyDAGrankAndNeighborPreference(); 
+   neighbors_updateMyDAGrankAndNeighborPreference();
 }
 
 //===== write addresses
@@ -483,7 +484,7 @@ void  neighbors_getNeighbor(open_addr_t* address, uint8_t addr_type, uint8_t ind
          openserial_printCritical(COMPONENT_NEIGHBORS,ERR_WRONG_ADDR_TYPE,
                                (errorparameter_t)addr_type,
                                (errorparameter_t)1);
-         break; 
+         break;
    }
 }
 
@@ -511,28 +512,28 @@ void neighbors_updateMyDAGrankAndNeighborPreference() {
    uint8_t   prefParentIdx;
    bool      prefParentFound;
    uint32_t  rankIncreaseIntermediary; // stores intermediary results of rankIncrease calculation
-   
+
    // if I'm a DAGroot, my DAGrank is always MINHOPRANKINCREASE
    if ((idmanager_getIsDAGroot())==TRUE) {
-       // the dagrank is not set through setting command, set rank to MINHOPRANKINCREASE here 
+       // the dagrank is not set through setting command, set rank to MINHOPRANKINCREASE here
        neighbors_vars.myDAGrank=MINHOPRANKINCREASE;
        return;
    }
-   
+
    // reset my DAG rank to max value. May be lowered below.
    neighbors_vars.myDAGrank  = MAXDAGRANK;
-   
+
    // by default, I haven't found a preferred parent
    prefParentFound           = FALSE;
    prefParentIdx             = 0;
-   
+
    // loop through neighbor table, update myDAGrank
    for (i=0;i<MAXNUMNEIGHBORS;i++) {
       if (neighbors_vars.neighbors[i].used==TRUE) {
-         
+
          // reset parent preference
          neighbors_vars.neighbors[i].parentPreference=0;
-         
+
          // calculate link cost to this neighbor
          if (neighbors_vars.neighbors[i].numTxACK==0) {
             rankIncrease = DEFAULTLINKCOST*2*MINHOPRANKINCREASE;
@@ -542,7 +543,7 @@ void neighbors_updateMyDAGrankAndNeighborPreference() {
             rankIncreaseIntermediary = (rankIncreaseIntermediary * 2 * MINHOPRANKINCREASE) / ((uint32_t)neighbors_vars.neighbors[i].numTxACK);
             rankIncrease = (uint16_t)(rankIncreaseIntermediary >> 10);
          }
-         
+
          tentativeDAGrank = neighbors_vars.neighbors[i].DAGrank+rankIncrease;
          if ( tentativeDAGrank<neighbors_vars.myDAGrank &&
               tentativeDAGrank<MAXDAGRANK) {
@@ -552,8 +553,8 @@ void neighbors_updateMyDAGrankAndNeighborPreference() {
             prefParentIdx              = i;
          }
       }
-   } 
-   
+   }
+
    // update preferred parent
    if (prefParentFound) {
       neighbors_vars.neighbors[prefParentIdx].parentPreference       = MAXPREFERENCE;
@@ -567,7 +568,7 @@ void neighbors_updateMyDAGrankAndNeighborPreference() {
 void  neighbors_removeOld() {
    uint8_t    i;
    uint16_t   timeSinceHeard;
-   
+
    for (i=0;i<MAXNUMNEIGHBORS;i++) {
       if (neighbors_vars.neighbors[i].used==1) {
          timeSinceHeard = ieee154e_asnDiff(&neighbors_vars.neighbors[i].asn);
@@ -575,7 +576,7 @@ void  neighbors_removeOld() {
             removeNeighbor(i);
          }
       }
-   } 
+   }
 }
 
 //===== debug
@@ -636,7 +637,7 @@ void registerNewNeighbor(open_addr_t* address,
             if (joinPrioPresent==TRUE){
                neighbors_vars.neighbors[i].joinPrio=joinPrio;
             }
-            
+
             // do I already have a preferred parent ? -- TODO change to use JP
             iHaveAPreferedParent = FALSE;
             for (j=0;j<MAXNUMNEIGHBORS;j++) {
@@ -645,7 +646,7 @@ void registerNewNeighbor(open_addr_t* address,
                }
             }
             // if I have none, and I'm not DAGroot, the new neighbor is my preferred
-            if (iHaveAPreferedParent==FALSE && idmanager_getIsDAGroot()==FALSE) {      
+            if (iHaveAPreferedParent==FALSE && idmanager_getIsDAGroot()==FALSE) {
                neighbors_vars.neighbors[i].parentPreference     = MAXPREFERENCE;
             }
             break;
@@ -658,6 +659,8 @@ void registerNewNeighbor(open_addr_t* address,
                                (errorparameter_t)0);
          return;
       }
+      sixtop_setHandler(SIX_HANDLER_OTF);
+      sixtop_addCells(address,1);
    }
 }
 
