@@ -1374,21 +1374,27 @@ bool sixtop_candidateAddCellList(
       cellInfo_ht* cellList
    ){
    uint8_t i;
-   uint8_t counter;
+   uint8_t numChecked;
    uint8_t numCandCells;
+   bool checked[SLOTFRAME_LENGTH];
 
    *type = 1;
    *frameID = schedule_getFrameHandle();
    *flag = 1; // the cells listed in cellList are available to be schedule.
 
    numCandCells=0;
-   for(counter=0;counter<SCHEDULEIEMAXNUMCELLS;counter++){
-      i = (openrandom_get16b()&0x07)+ (openrandom_get16b()&0x03);
-      if(schedule_isSlotOffsetAvailable(i)==TRUE){
-         cellList[numCandCells].tsNum       = i;
-         cellList[numCandCells].choffset    = 0;
-         cellList[numCandCells].linkoptions = CELLTYPE_TX;
-         numCandCells++;
+   numChecked=0;
+   while(numCandCells<SCHEDULEIEMAXNUMCELLS && numChecked<SLOTFRAME_LENGTH){
+      i = openrandom_get16b()%SLOTFRAME_LENGTH;
+      if(!checked[i]){
+        if(schedule_isSlotOffsetAvailable(i)==TRUE){
+          cellList[numCandCells].tsNum       = i;
+          cellList[numCandCells].choffset    = 0;
+          cellList[numCandCells].linkoptions = CELLTYPE_TX;
+          numCandCells++;
+        }
+        checked[i]=TRUE;
+        numChecked++;
       }
    }
 
