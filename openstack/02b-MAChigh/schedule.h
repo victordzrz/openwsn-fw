@@ -17,7 +17,7 @@
 
 The superframe repears over time and can be arbitrarly long.
 */
-#define SLOTFRAME_LENGTH    11 //should be 101
+#define SLOTFRAME_LENGTH    6 //should be 101
 
 //draft-ietf-6tisch-minimal-06
 #define SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS                      1
@@ -27,7 +27,7 @@ The superframe repears over time and can be arbitrarly long.
 #define SCHEDULE_MINIMAL_6TISCH_DEFAULT_SLOTFRAME_NUMBER          1 //1 slotframe by default.
 
 #define NUMSERIALRX          1
-#define NUMSLOTSOFF          3
+#define NUMSLOTSOFF          4
 
 /**
 \brief Maximum number of active slots in a superframe.
@@ -61,7 +61,7 @@ See MINBE for an explanation of backoff.
 \brief a threshold used for triggering the maintaining process.uint: percent
 */
 #define PDR_THRESHOLD      80 // 80 means 80%
-#define MIN_NUMTX_FOR_PDR  50 // don't calculate PDR when numTx is lower than this value 
+#define MIN_NUMTX_FOR_PDR  50 // don't calculate PDR when numTx is lower than this value
 
 //=========================== typedef =========================================
 
@@ -149,7 +149,7 @@ owerror_t          schedule_addActiveSlot(
 );
 
 void               schedule_getSlotInfo(
-   slotOffset_t         slotOffset,                      
+   slotOffset_t         slotOffset,
    open_addr_t*         neighbor,
    slotinfo_element_t*  info
 );
@@ -186,5 +186,5 @@ void               schedule_indicateTx(
 \}
 \}
 */
-          
+
 #endif
