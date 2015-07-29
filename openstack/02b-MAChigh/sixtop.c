@@ -595,6 +595,7 @@ void task_sixtopNotifReceive() {
       //log error
       return;
    }
+   openserial_printMessage("after",5);
 
    // toss the header IEs
    packetfunctions_tossHeader(msg,lenIE);
@@ -1153,6 +1154,7 @@ void sixtop_notifyReceiveCommand(
    bandwidth_IE_ht* bandwidth_ie,
    schedule_IE_ht* schedule_ie,
    open_addr_t* addr){
+   openserial_printMessage("recC",4);
    switch(opcode_ie->opcode){
       case SIXTOP_SOFT_CELL_REQ:
          if(sixtop_vars.six2six_state == SIX_IDLE)
@@ -1206,11 +1208,14 @@ void sixtop_notifyReceiveLinkRequest(
                                             schedule_ie->cellList,
                                             bw) == FALSE){
       }
+      openserial_printMessage("reqfail",7);
       scheduleCellSuccess = FALSE;
    } else {
+      openserial_printMessage("reqsuc",6);
       scheduleCellSuccess = TRUE;
    }
 
+   openserial_printMessage("lr",2);
    //call link response command
    sixtop_linkResponse(scheduleCellSuccess,
                        addr,
@@ -1317,6 +1322,7 @@ void sixtop_notifyReceiveLinkResponse(
                                                schedule_ie->cellList,
                                                bw) == FALSE){
          // link request failed,inform uplayer
+         openserial_printMessage("fail",4);
       } else {
          sixtop_addCellsByState(frameID,
                                 bw,
@@ -1324,6 +1330,7 @@ void sixtop_notifyReceiveLinkResponse(
                                 addr,
                                 sixtop_vars.six2six_state);
       // link request success,inform uplayer
+      openserial_printMessage("suc",3);
       }
    }
    leds_debug_off();
@@ -1374,27 +1381,23 @@ bool sixtop_candidateAddCellList(
       cellInfo_ht* cellList
    ){
    uint8_t i;
-   uint8_t numChecked;
    uint8_t numCandCells;
-   bool checked[SLOTFRAME_LENGTH];
 
    *type = 1;
    *frameID = schedule_getFrameHandle();
    *flag = 1; // the cells listed in cellList are available to be schedule.
 
    numCandCells=0;
-   numChecked=0;
-   while(numCandCells<SCHEDULEIEMAXNUMCELLS && numChecked<SLOTFRAME_LENGTH){
-      i = openrandom_get16b()%SLOTFRAME_LENGTH;
-      if(!checked[i]){
-        if(schedule_isSlotOffsetAvailable(i)==TRUE){
-          cellList[numCandCells].tsNum       = i;
-          cellList[numCandCells].choffset    = 0;
-          cellList[numCandCells].linkoptions = CELLTYPE_TX;
-          numCandCells++;
-        }
-        checked[i]=TRUE;
-        numChecked++;
+   while(numCandCells<SCHEDULEIEMAXNUMCELLS){
+      i = schedule_getRandomAvailableOffset();
+      if(i==-1){
+        break;
+      }
+      if(schedule_isSlotOffsetAvailable(i)==TRUE){
+        cellList[numCandCells].tsNum       = i;
+        cellList[numCandCells].choffset    = 0;
+        cellList[numCandCells].linkoptions = CELLTYPE_TX;
+        numCandCells++;
       }
    }
 
@@ -1528,6 +1531,8 @@ bool sixtop_areAvailableCellsToBeScheduled(
    if(bw == 0 || bw>SCHEDULEIEMAXNUMCELLS || numOfCells>SCHEDULEIEMAXNUMCELLS){
       // log wrong parameter error TODO
       available = FALSE;
+       openserial_printMessage("nav",3);
+
    } else {
 
       do {
@@ -1547,11 +1552,14 @@ bool sixtop_areAvailableCellsToBeScheduled(
          }
          // local schedule can statisfy the bandwidth of cell request.
          available = TRUE;
+         openserial_printMessage("av",2);
+
       } else {
          // local schedule can't statisfy the bandwidth of cell request
          available = FALSE;
+         openserial_printMessage("nav",3);
+
       }
    }
-
    return available;
 }
