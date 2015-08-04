@@ -182,6 +182,11 @@ void               schedule_indicateTx(
                         bool      succesfullTx
                    );
 
+//offset management
+slotOffset_t schedule_getRandomAvailableOffset(void);
+bool schedule_releaseOffset(slotOffset_t offset);
+bool schedule_holdOffset(slotOffset_t offset);
+
 /**
 \}
 \}
