@@ -89,7 +89,7 @@ typedef struct {
    uint8_t         DTSN;
    uint8_t         flags;
    uint8_t         reserved;
-   uint8_t         DODAGID[16];    
+   uint8_t         DODAGID[16];
 } icmpv6rpl_dio_ht;
 END_PACK
 
@@ -117,8 +117,8 @@ typedef struct {
    uint8_t         optionLength;
    uint8_t         E_flags;
    uint8_t         PathControl;
-   uint8_t         PathSequence;   
-   uint8_t         PathLifetime;   
+   uint8_t         PathSequence;
+   uint8_t         PathLifetime;
 } icmpv6rpl_dao_transit_ht;
 END_PACK
 
@@ -130,7 +130,7 @@ typedef struct {
    uint8_t         type;               ///< set by the DODAG root.
    uint8_t         optionLength;
    uint8_t         flags;
-   uint8_t         prefixLength;  
+   uint8_t         prefixLength;
 } icmpv6rpl_dao_target_ht;
 END_PACK
 

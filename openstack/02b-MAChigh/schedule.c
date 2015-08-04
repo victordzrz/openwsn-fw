@@ -289,9 +289,6 @@ owerror_t schedule_addActiveSlot(
    INTERRUPT_DECLARATION();
    DISABLE_INTERRUPTS();
 
-   memcpy(schedule_message,"add%0%",6);
-   openserial_messagePutHex(schedule_message,3,slotOffset);
-   openserial_printMessage(schedule_message,6);
 
 
    // find an empty schedule entry container
@@ -455,12 +452,7 @@ bool schedule_isSlotOffsetAvailable(uint16_t slotOffset){
    INTERRUPT_DECLARATION();
    DISABLE_INTERRUPTS();
 
-   memcpy(schedule_message,"ava%0%",6);
-   openserial_messagePutHex(schedule_message,3,slotOffset);
-   openserial_printMessage(schedule_message,6);
-
    if(slotOffset<0 || slotOffset>=SLOTFRAME_LENGTH){
-     openserial_printMessage("out",3);
      return FALSE;
    }
 

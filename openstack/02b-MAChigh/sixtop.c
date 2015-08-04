@@ -170,7 +170,7 @@ void sixtop_addCells(open_addr_t* neighbor, uint16_t numCells){
    uint8_t           flag;
    bool              outcome;
    cellInfo_ht       cellList[SCHEDULEIEMAXNUMCELLS];
-   
+
    frameID    = schedule_getFrameHandle();
 
    memset(cellList,0,sizeof(cellList));
@@ -258,7 +258,7 @@ void sixtop_removeCell(open_addr_t* neighbor){
    uint8_t           frameID;
    uint8_t           flag;
    cellInfo_ht       cellList[SCHEDULEIEMAXNUMCELLS];
-   
+
    memset(cellList,0,sizeof(cellList));
 
    // filter parameters
@@ -338,7 +338,7 @@ void sixtop_removeCellByInfo(open_addr_t*  neighbor,cellInfo_ht* cellInfo){
    uint8_t           frameID;
    uint8_t           flag;
    cellInfo_ht       cellList[SCHEDULEIEMAXNUMCELLS];
-   
+
    memset(cellList,0,sizeof(cellList));
 
    // filter parameters
@@ -562,7 +562,6 @@ void task_sixtopNotifReceive() {
       //log error
       return;
    }
-   openserial_printMessage("after",5);
 
    // toss the header IEs
    packetfunctions_tossHeader(msg,lenIE);
@@ -734,7 +733,7 @@ void timer_sixtop_management_fired(void) {
          if (
              entry       != NULL                        && \
              entry->type != CELLTYPE_OFF                && \
-             entry->type != CELLTYPE_TXRX               
+             entry->type != CELLTYPE_TXRX
          ){
              sixtop_maintaining(entry->slotOffset,&(entry->neighbor));
          }
@@ -1091,7 +1090,6 @@ void sixtop_notifyReceiveCommand(
    bandwidth_IE_ht* bandwidth_ie,
    schedule_IE_ht* schedule_ie,
    open_addr_t* addr){
-   openserial_printMessage("recC",4);
    switch(opcode_ie->opcode){
       case SIXTOP_SOFT_CELL_REQ:
          if(sixtop_vars.six2six_state == SIX_IDLE)
@@ -1145,14 +1143,11 @@ void sixtop_notifyReceiveLinkRequest(
                                             schedule_ie->cellList,
                                             bw) == FALSE){
       }
-      openserial_printMessage("reqfail",7);
       scheduleCellSuccess = FALSE;
    } else {
-      openserial_printMessage("reqsuc",6);
       scheduleCellSuccess = TRUE;
    }
 
-   openserial_printMessage("lr",2);
    //call link response command
    sixtop_linkResponse(scheduleCellSuccess,
                        addr,
@@ -1171,7 +1166,7 @@ void sixtop_linkResponse(
    uint8_t bw;
    uint8_t type,frameID,flag;
    cellInfo_ht* cellList;
-    
+
    // get parameters for scheduleIE
    type = schedule_ie->type;
    frameID = schedule_ie->frameID;
@@ -1202,7 +1197,7 @@ void sixtop_linkResponse(
                                                   frameID,
                                                   flag,
                                                   cellList);
-    
+
    if(scheduleCellSuccess){
       bw = bandwidth;
    } else {
@@ -1247,7 +1242,6 @@ void sixtop_notifyReceiveLinkResponse(
                                                schedule_ie->cellList,
                                                bw) == FALSE){
          // link request failed,inform uplayer
-         openserial_printMessage("fail",4);
       } else {
          sixtop_addCellsByState(frameID,
                                 bw,
@@ -1255,7 +1249,6 @@ void sixtop_notifyReceiveLinkResponse(
                                 addr,
                                 sixtop_vars.six2six_state);
       // link request success,inform uplayer
-      openserial_printMessage("suc",3);
       }
    }
    leds_debug_off();
@@ -1456,8 +1449,6 @@ bool sixtop_areAvailableCellsToBeScheduled(
    if(bw == 0 || bw>SCHEDULEIEMAXNUMCELLS || numOfCells>SCHEDULEIEMAXNUMCELLS){
       // log wrong parameter error TODO
       available = FALSE;
-       openserial_printMessage("nav",3);
-
    } else {
       do {
          if(schedule_isSlotOffsetAvailable(cellList[i].tsNum) == TRUE){
@@ -1476,13 +1467,10 @@ bool sixtop_areAvailableCellsToBeScheduled(
          }
          // local schedule can statisfy the bandwidth of cell request.
          available = TRUE;
-         openserial_printMessage("av",2);
 
       } else {
          // local schedule can't statisfy the bandwidth of cell request
          available = FALSE;
-         openserial_printMessage("nav",3);
-
       }
    }
    return available;
