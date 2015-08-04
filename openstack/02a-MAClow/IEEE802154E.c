@@ -115,7 +115,7 @@ void ieee154e_init() {
    memset(&ieee154e_vars,0,sizeof(ieee154e_vars_t));
    memset(&ieee154e_dbg,0,sizeof(ieee154e_dbg_t));
 
-   ieee154e_vars.singleChannel     = SYNCHRONIZING_CHANNEL;
+   ieee154e_vars.singleChannel     = 0;
    ieee154e_vars.isAckEnabled      = TRUE;
    ieee154e_vars.isSecurityEnabled = FALSE;
    // default hopping template
@@ -933,7 +933,7 @@ port_INLINE void activity_ti1ORri1() {
          radio_setTimerPeriod(TsSlotDuration*(NUMSERIALRX));
 
          //increase ASN by NUMSERIALRX-1 slots as at this slot is already incremented by 1
-         for (i=0;i<NUMSERIALRX-1;i++){
+         for (i=0;i<NUMSERIALRX;i++){
             incrementAsnOffset();
          }
 #ifdef ADAPTIVE_SYNC
