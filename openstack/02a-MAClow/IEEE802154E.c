@@ -16,6 +16,7 @@
 #include "sixtop.h"
 #include "adaptive_sync.h"
 #include "processIE.h"
+#include "dummy.h"
 
 //=========================== variables =======================================
 
@@ -25,7 +26,7 @@ ieee154e_dbg_t     ieee154e_dbg;
 uint8_t ieee154e_message[20];
 
 //=========================== prototypes ======================================
-
+void ieee154e_sendDummy(open_addr_t * dest);
 void ieee154e_printFreq(uint8_t freq);
 
 // SYNCHRONIZING
@@ -115,7 +116,7 @@ void ieee154e_init() {
    memset(&ieee154e_vars,0,sizeof(ieee154e_vars_t));
    memset(&ieee154e_dbg,0,sizeof(ieee154e_dbg_t));
 
-   ieee154e_vars.singleChannel     = 0;
+   ieee154e_vars.singleChannel     = SYNCHRONIZING_CHANNEL;
    ieee154e_vars.isAckEnabled      = TRUE;
    ieee154e_vars.isSecurityEnabled = FALSE;
    // default hopping template
@@ -909,7 +910,20 @@ port_INLINE void activity_ti1ORri1() {
          if (ieee154e_vars.dataToSend==NULL) {
             if (cellType==CELLTYPE_TX) {
                // abort
-               endSlot();
+               //endSlot();
+               //send dummy
+               //openserial_printMessage("SDUMMY",6);
+               ieee154e_vars.dataToSend=dummy_getPacket(&neighbor);
+               //memcpy(ieee154e_message,"MS/%0%",6);
+               //openserial_messagePutHex(ieee154e_message,3,(ieee154e_vars.dataToSend)->length);
+               //openserial_printMessage(ieee154e_message,6);
+               changeState(S_TXDATAOFFSET);
+               // change owner
+               ieee154e_vars.dataToSend->owner = COMPONENT_IEEE802154E;
+               // record that I attempt to transmit this packet
+               ieee154e_vars.dataToSend->l2_numTxAttempts++;
+               // arm tt1
+               radiotimer_schedule(DURATION_tt1);
                break;
             } else {
                changeToRX=TRUE;
@@ -954,7 +968,7 @@ port_INLINE void activity_ti1ORri1() {
          radio_setTimerPeriod(TsSlotDuration*(NUMSERIALRX));
 
          //increase ASN by NUMSERIALRX-1 slots as at this slot is already incremented by 1
-         for (i=0;i<NUMSERIALRX-1;i++){
+         for (i=0;i<NUMSERIALRX;i++){
             incrementAsnOffset();
          }
 #ifdef ADAPTIVE_SYNC
@@ -983,9 +997,15 @@ port_INLINE void activity_ti2() {
    // change state
    changeState(S_TXDATAPREPARE);
 
+   //memcpy(ieee154e_message,"MS2%0%",6);
+   //openserial_messagePutHex(ieee154e_message,3,(ieee154e_vars.dataToSend)->length);
+   //openserial_printMessage(ieee154e_message,6);
    // make a local copy of the frame
    packetfunctions_duplicatePacket(&ieee154e_vars.localCopyForTransmission, ieee154e_vars.dataToSend);
 
+   //memcpy(ieee154e_message,"MS2%0%",6);
+   //openserial_messagePutHex(ieee154e_message,3,ieee154e_vars.localCopyForTransmission.length);
+   //openserial_printMessage(ieee154e_message,6);
    // check if packet needs to be encrypted/authenticated before transmission
    if (ieee154e_vars.localCopyForTransmission.l2_securityLevel != IEEE154_ASH_SLF_TYPE_NOSEC) { // security enabled
       // encrypt in a local copy
@@ -998,7 +1018,6 @@ port_INLINE void activity_ti2() {
 
    // add 2 CRC bytes only to the local copy as we end up here for each retransmission
    packetfunctions_reserveFooterSize(&ieee154e_vars.localCopyForTransmission, 2);
-
    // calculate the frequency to transmit on
    ieee154e_vars.freq = calculateFrequency(schedule_getChannelOffset());
 
@@ -1264,6 +1283,8 @@ port_INLINE void activity_ti9(PORT_RADIOTIMER_WIDTH capturedTime) {
          break;
       }
 
+      //openserial_printMessage("l",1);
+
       // toss CRC (2 last bytes)
       packetfunctions_tossFooter(   ieee154e_vars.ackReceived, LENGTH_CRC);
 
@@ -1272,6 +1293,7 @@ port_INLINE void activity_ti9(PORT_RADIOTIMER_WIDTH capturedTime) {
          // break from the do-while loop and execute the clean-up code below
          break;
       }
+    //  openserial_printMessage("crc",3);
 
       // parse the IEEE802.15.4 header (RX ACK)
       ieee802154_retrieveHeader(ieee154e_vars.ackReceived,&ieee802514_header);
@@ -1281,6 +1303,7 @@ port_INLINE void activity_ti9(PORT_RADIOTIMER_WIDTH capturedTime) {
          // break from the do-while loop and execute the clean-up code below
          break;
       }
+      //openserial_printMessage("header",6);
 
       // store header details in packet buffer
       ieee154e_vars.ackReceived->l2_frameType  = ieee802514_header.frameType;
@@ -1293,6 +1316,7 @@ port_INLINE void activity_ti9(PORT_RADIOTIMER_WIDTH capturedTime) {
          	 break;
           }
       } // checked if unsecured frame should pass during header retrieval
+      //openserial_printMessage("secure",6);
 
       // toss the IEEE802.15.4 header
       packetfunctions_tossHeader(ieee154e_vars.ackReceived,ieee802514_header.headerLength);
@@ -1309,9 +1333,11 @@ port_INLINE void activity_ti9(PORT_RADIOTIMER_WIDTH capturedTime) {
          ) {
          synchronizeAck(ieee802514_header.timeCorrection);
       }
+      //openserial_printMessage("valid",5);
 
       // inform schedule of successful transmission
       schedule_indicateTx(&ieee154e_vars.asn,TRUE);
+      //openserial_printMessage("ACK",3);
 
       // inform upper layer
       notif_sendDone(ieee154e_vars.dataToSend,E_SUCCESS);
@@ -1320,6 +1346,7 @@ port_INLINE void activity_ti9(PORT_RADIOTIMER_WIDTH capturedTime) {
       // in any case, execute the clean-up code below (processing of ACK done)
    } while (0);
 
+   //openserial_printMessage("ti9E",4);
    // free the received ack so corresponding RAM memory can be recycled
    openqueue_freePacketBuffer(ieee154e_vars.ackReceived);
 
@@ -1491,6 +1518,9 @@ port_INLINE void activity_ri5(PORT_RADIOTIMER_WIDTH capturedTime) {
       ieee154e_vars.dataReceived->l2_IEListPresent  = ieee802514_header.ieListPresent;
       memcpy(&(ieee154e_vars.dataReceived->l2_nextORpreviousHop),&(ieee802514_header.src),sizeof(open_addr_t));
 
+      // if(ieee154e_vars.dataReceived->l2_frameType==IEEE154_TYPE_DUMMY){
+      //   openserial_printMessage("RDUMMY",6);
+      // }
       // if security is enabled, decrypt/authenticate the frame.
       if (ieee154e_vars.dataReceived->l2_securityLevel != IEEE154_ASH_SLF_TYPE_NOSEC) {
          if (IEEE802154_SECURITY.incomingFrame(ieee154e_vars.dataReceived) != E_SUCCESS) {
@@ -1530,8 +1560,10 @@ port_INLINE void activity_ri5(PORT_RADIOTIMER_WIDTH capturedTime) {
       // check if ack requested
       if (ieee802514_header.ackRequested==1 && ieee154e_vars.isAckEnabled == TRUE) {
          // arm rt5
+         //openserial_printMessage("ACKR",4);
          radiotimer_schedule(DURATION_rt5);
       } else {
+         //openserial_printMessage("NACKR",5);
          // synchronize to the received packet iif I'm not a DAGroot and this is my preferred parent
          if (idmanager_getIsDAGroot()==FALSE && neighbors_isPreferredParent(&(ieee154e_vars.dataReceived->l2_nextORpreviousHop))) {
             synchronizePacket(ieee154e_vars.syncCapturedTime);
@@ -1742,7 +1774,9 @@ port_INLINE bool isValidRxFrame(ieee802154_header_iht* ieee802514_header) {
    return ieee802514_header->valid==TRUE                                                           && \
           (
              ieee802514_header->frameType==IEEE154_TYPE_DATA                   ||
-             ieee802514_header->frameType==IEEE154_TYPE_BEACON
+             ieee802514_header->frameType==IEEE154_TYPE_BEACON                 ||
+             ieee802514_header->frameType==IEEE154_TYPE_DUMMY
+
           )                                                                                        && \
           packetfunctions_sameAddress(&ieee802514_header->panid,idmanager_getMyID(ADDR_PANID))     && \
           (
@@ -2036,18 +2070,24 @@ void changeIsSync(bool newIsSync) {
 void notif_sendDone(OpenQueueEntry_t* packetSent, owerror_t error) {
    // record the outcome of the trasmission attempt
    packetSent->l2_sendDoneError   = error;
+    // if(packetSent->l2_frameType==IEEE154_TYPE_DUMMY){
+    //   openserial_printMessage("DDUMMY",6);
+    // }
    // record the current ASN
    memcpy(&packetSent->l2_asn,&ieee154e_vars.asn,sizeof(asn_t));
-   // associate this packet with the virtual component
-   // COMPONENT_IEEE802154E_TO_RES so RES can knows it's for it
-   packetSent->owner              = COMPONENT_IEEE802154E_TO_SIXTOP;
-   // post RES's sendDone task
-   scheduler_push_task(task_sixtopNotifSendDone,TASKPRIO_SIXTOP_NOTIF_TXDONE);
+   if(packetSent->l2_frameType!=IEEE154_TYPE_DUMMY){
+     // associate this packet with the virtual component
+     // COMPONENT_IEEE802154E_TO_RES so RES can knows it's for it
+     packetSent->owner              = COMPONENT_IEEE802154E_TO_SIXTOP;
+     // post RES's sendDone task
+     scheduler_push_task(task_sixtopNotifSendDone,TASKPRIO_SIXTOP_NOTIF_TXDONE);
+   }
    // wake up the scheduler
    SCHEDULER_WAKEUP();
 }
 
 void notif_receive(OpenQueueEntry_t* packetReceived) {
+   //openserial_printMessage("NR",2);
    // record the current ASN
    memcpy(&packetReceived->l2_asn, &ieee154e_vars.asn, sizeof(asn_t));
    // indicate reception to the schedule, to keep statistics
@@ -2269,5 +2309,21 @@ void ieee154e_printFreq(uint8_t freq){
   memcpy(ieee154e_message,"f%0%",4);
   openserial_messagePutHex(ieee154e_message,1,freq);
   openserial_printMessage(ieee154e_message,4);
+
+}
+
+void ieee154e_sendDummy(open_addr_t * dest){
+  //openserial_printMessage("SDUMMY",6);
+  ieee154e_vars.dataToSend=dummy_getPacket(dest);
+  //memcpy(ieee154e_message,"MS/%0%",6);
+  //openserial_messagePutHex(ieee154e_message,3,(ieee154e_vars.dataToSend)->length);
+  //openserial_printMessage(ieee154e_message,6);
+  changeState(S_TXDATAOFFSET);
+  // change owner
+  ieee154e_vars.dataToSend->owner = COMPONENT_IEEE802154E;
+  // record that I attempt to transmit this packet
+  ieee154e_vars.dataToSend->l2_numTxAttempts++;
+  // arm tt1
+  radiotimer_schedule(DURATION_tt1);
 
 }

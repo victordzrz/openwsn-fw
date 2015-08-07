@@ -35,8 +35,8 @@ void    c6t_sendDone(
 //=========================== public ==========================================
 
 void c6t_init() {
-   if(idmanager_getIsDAGroot()==TRUE) return; 
-   
+   if(idmanager_getIsDAGroot()==TRUE) return;
+
    // prepare the resource descriptor for the /6t path
    c6t_vars.desc.path0len            = sizeof(c6t_path0)-1;
    c6t_vars.desc.path0val            = (uint8_t*)(&c6t_path0);
@@ -46,7 +46,7 @@ void c6t_init() {
    c6t_vars.desc.discoverable        = TRUE;
    c6t_vars.desc.callbackRx          = &c6t_receive;
    c6t_vars.desc.callbackSendDone    = &c6t_sendDone;
-   
+
    opencoap_register(&c6t_vars.desc);
 }
 
@@ -67,20 +67,20 @@ owerror_t c6t_receive(
       coap_header_iht*  coap_header,
       coap_option_iht*  coap_options
    ) {
-   
+
    owerror_t            outcome;
    open_addr_t          neighbor;
    bool                 foundNeighbor;
-   
+
    switch (coap_header->Code) {
-      
+
       case COAP_CODE_REQ_PUT:
          // add a slot
-         
+
          // reset packet payload
          msg->payload                  = &(msg->packet[127]);
          msg->length                   = 0;
-         
+
          // get preferred parent
          foundNeighbor = neighbors_getPreferredParentEui64(&neighbor);
          if (foundNeighbor==FALSE) {
@@ -96,20 +96,20 @@ owerror_t c6t_receive(
             &neighbor,
             1
          );
-         
+
          // set the CoAP header
          coap_header->Code             = COAP_CODE_RESP_CHANGED;
-         
+
          outcome                       = E_SUCCESS;
          break;
-      
+
       case COAP_CODE_REQ_DELETE:
          // delete a slot
-         
+
          // reset packet payload
          msg->payload                  = &(msg->packet[127]);
          msg->length                   = 0;
-         
+
          // get preferred parent
          foundNeighbor = neighbors_getPreferredParentEui64(&neighbor);
          if (foundNeighbor==FALSE) {
@@ -117,24 +117,24 @@ owerror_t c6t_receive(
             coap_header->Code          = COAP_CODE_RESP_PRECONDFAILED;
             break;
          }
-         
+
          sixtop_setHandler(SIX_HANDLER_OTF);
          // call sixtop
          sixtop_removeCell(
             &neighbor
          );
-         
+
          // set the CoAP header
          coap_header->Code             = COAP_CODE_RESP_CHANGED;
-         
+
          outcome                       = E_SUCCESS;
          break;
-         
+
       default:
          outcome = E_FAIL;
          break;
    }
-   
+
    return outcome;
 }
 

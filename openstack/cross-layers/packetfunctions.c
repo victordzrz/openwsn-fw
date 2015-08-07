@@ -164,7 +164,7 @@ bool packetfunctions_isAllHostsMulticast(open_addr_t* address) {
 
 bool packetfunctions_sameAddress(open_addr_t* address_1, open_addr_t* address_2) {
    uint8_t address_length;
-   
+
    if (address_1->type!=address_2->type) {
       return FALSE;
    }
@@ -181,7 +181,7 @@ bool packetfunctions_sameAddress(open_addr_t* address_1, open_addr_t* address_2)
       case ADDR_ANYCAST:
          address_length = 16;
          break;
-    
+
       default:
          openserial_printCritical(COMPONENT_PACKETFUNCTIONS,ERR_WRONG_ADDR_TYPE,
                                (errorparameter_t)address_1->type,
@@ -199,7 +199,7 @@ bool packetfunctions_sameAddress(open_addr_t* address_1, open_addr_t* address_2)
 void packetfunctions_readAddress(uint8_t* payload, uint8_t type, open_addr_t* writeToAddress, bool littleEndian) {
    uint8_t i;
    uint8_t address_length;
-   
+
    writeToAddress->type = type;
    switch (type) {
       case ADDR_16B:
@@ -219,7 +219,7 @@ void packetfunctions_readAddress(uint8_t* payload, uint8_t type, open_addr_t* wr
                                (errorparameter_t)6);
          return;
    }
-   
+
    for (i=0;i<address_length;i++) {
       if (littleEndian) {
          writeToAddress->addr_128b[address_length-1-i] = *(payload+i);
@@ -232,7 +232,7 @@ void packetfunctions_readAddress(uint8_t* payload, uint8_t type, open_addr_t* wr
 void packetfunctions_writeAddress(OpenQueueEntry_t* msg, open_addr_t* address, bool littleEndian) {
    uint8_t i;
    uint8_t address_length;
-   
+
    switch (address->type) {
       case ADDR_16B:
       case ADDR_PANID:
@@ -251,7 +251,7 @@ void packetfunctions_writeAddress(OpenQueueEntry_t* msg, open_addr_t* address, b
                                (errorparameter_t)7);
          return;
    }
-   
+
    for (i=0;i<address_length;i++) {
       msg->payload      -= sizeof(uint8_t);
       msg->length       += sizeof(uint8_t);
@@ -306,7 +306,7 @@ void packetfunctions_tossFooter(OpenQueueEntry_t* pkt, uint8_t header_length) {
 //======= packet duplication
 // function duplicates a frame from one OpenQueueEntry structure to the other,
 // updating pointers to the new memory location. Used to make a local copy of
-// the frame before transmission (where it can possibly be encrypted). 
+// the frame before transmission (where it can possibly be encrypted).
 void packetfunctions_duplicatePacket(OpenQueueEntry_t* dst, OpenQueueEntry_t* src) {
    // make a copy of the frame
    memcpy(dst, src, sizeof(OpenQueueEntry_t));
@@ -383,40 +383,40 @@ bool packetfunctions_checkCRC(OpenQueueEntry_t* msg) {
 void packetfunctions_calculateChecksum(OpenQueueEntry_t* msg, uint8_t* checksum_ptr) {
    uint8_t temp_checksum[2];
    uint8_t little_helper[2];
-   
+
    // initialize running checksum
    temp_checksum[0]  = 0;
    temp_checksum[1]  = 0;
-   
+
    //===== IPv6 pseudo header
-   
+
    // source address (prefix and EUI64)
    onesComplementSum(temp_checksum,(idmanager_getMyID(ADDR_PREFIX))->prefix,8);
    onesComplementSum(temp_checksum,(idmanager_getMyID(ADDR_64B))->addr_64b,8);
-   
+
    // destination address
    onesComplementSum(temp_checksum,msg->l3_destinationAdd.addr_128b,16);
-   
+
    // length
    little_helper[0] = 0;
    little_helper[1] = msg->length;
    onesComplementSum(temp_checksum,little_helper,2);
-   
+
    // next header
    little_helper[0] = 0;
    little_helper[1] = msg->l4_protocol;
    onesComplementSum(temp_checksum,little_helper,2);
-   
+
    //===== payload
-   
+
    // reset the checksum currently in the payload
    *checksum_ptr     = 0;
    *(checksum_ptr+1) = 0;
-   
+
    onesComplementSum(temp_checksum,msg->payload,msg->length);
    temp_checksum[0] ^= 0xFF;
    temp_checksum[1] ^= 0xFF;
-   
+
    //write in packet
    *checksum_ptr     = temp_checksum[0];
    *(checksum_ptr+1) = temp_checksum[1];
@@ -467,5 +467,6 @@ uint32_t packetfunctions_ntohl( uint8_t* src ) {
       (((uint32_t) src[3])
       );
 }
+
 
 //=========================== private =========================================

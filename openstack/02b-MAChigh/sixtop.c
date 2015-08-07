@@ -21,6 +21,7 @@
 //=========================== variables =======================================
 
 sixtop_vars_t sixtop_vars;
+uint8_t * sixtop_message[20];
 
 //=========================== prototypes ======================================
 
@@ -460,6 +461,7 @@ owerror_t sixtop_send(OpenQueueEntry_t *msg) {
 
 void task_sixtopNotifSendDone() {
    OpenQueueEntry_t* msg;
+   //openserial_printMessage("NSD",3);
 
    // get recently-sent packet from openqueue
    msg = openqueue_sixtopGetSentPacket();
@@ -523,7 +525,10 @@ void task_sixtopNotifSendDone() {
       case COMPONENT_SIXTOP_RES:
          sixtop_six2six_sendDone(msg,msg->l2_sendDoneError);
          break;
-
+      case COMPONENT_DUMMY:
+        openqueue_freePacketBuffer(msg);
+        //openserial_printMessage("FREE",4);
+        break;
       default:
          // send the rest up the stack
          iphc_sendDone(msg,msg->l2_sendDoneError);
@@ -591,6 +596,10 @@ void task_sixtopNotifReceive() {
             openqueue_freePacketBuffer(msg);
          }
          break;
+      case IEEE154_TYPE_DUMMY:
+        openqueue_freePacketBuffer(msg);
+        //openserial_printMessage("DUMMY",5);
+        break;
       case IEEE154_TYPE_ACK:
       default:
          // free the packet's RAM memory

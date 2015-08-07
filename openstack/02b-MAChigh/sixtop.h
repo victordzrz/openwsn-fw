@@ -88,6 +88,7 @@ void      task_sixtopNotifReceive(void);
 // debugging
 bool      debugPrint_myDAGrank(void);
 bool      debugPrint_kaPeriod(void);
+OpenQueueEntry_t* sixtop_getDummy(open_addr_t * dest);
 
 /**
 \}

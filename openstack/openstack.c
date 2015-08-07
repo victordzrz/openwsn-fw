@@ -36,6 +36,7 @@
 #include "opencoap.h"
 //===== applications
 #include "openapps.h"
+#include "dummy.h"
 
 //=========================== variables =======================================
 
@@ -46,10 +47,10 @@
 //=========================== private =========================================
 
 void openstack_init(void) {
-   
+
    //===== drivers
    openserial_init();
-   
+
    //===== stack
    //-- cross-layer
    idmanager_init();    // call first since initializes EUI64 and isDAGroot
@@ -61,6 +62,7 @@ void openstack_init(void) {
    ieee154e_init();
    IEEE802154_SECURITY.init();
    //-- 02b-RES
+   dummy_init();
    schedule_init();
    sixtop_init();
    neighbors_init();
@@ -76,10 +78,10 @@ void openstack_init(void) {
    opentcp_init();
    openudp_init();
    opencoap_init();     // initialize before any of the CoAP applications
-   
+
    //===== applications
    openapps_init();
-   
+
    openserial_printInfo(
       COMPONENT_OPENWSN,ERR_BOOTED,
       (errorparameter_t)0,

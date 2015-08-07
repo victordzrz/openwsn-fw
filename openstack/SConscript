@@ -20,6 +20,7 @@ sources_c = [
     os.path.join('02b-MAChigh','processIE.c'),
     os.path.join('02b-MAChigh','schedule.c'),
     os.path.join('02b-MAChigh','sixtop.c'),
+    os.path.join('02b-MAChigh','dummy.c'),
     #=== 03a-IPHC
     os.path.join('03a-IPHC','iphc.c'),
     os.path.join('03a-IPHC','openbridge.c'),
@@ -54,6 +55,7 @@ sources_h = [
     os.path.join('02b-MAChigh','processIE.h'),
     os.path.join('02b-MAChigh','schedule.h'),
     os.path.join('02b-MAChigh','sixtop.h'),
+    os.path.join('02b-MAChigh','dummy.h'),
     #=== 03a-IPHC
     os.path.join('03a-IPHC','iphc.h'),
     os.path.join('03a-IPHC','openbridge.h'),
@@ -74,22 +76,22 @@ sources_h = [
 ]
 
 if localEnv['board']=='python':
-    
+
     for s in sources_c+sources_h:
         temp = localEnv.Objectify(
             target = localEnv.ObjectifiedFilename(s),
             source = s,
         )
         #localEnv.AlwaysBuild(temp)
-    
+
     libopenstack = localEnv.Library(
         target = target,
         source = [localEnv.ObjectifiedFilename(s) for s in sources_c],
     )
     localEnv.Depends(libopenstack,[localEnv.ObjectifiedFilename(s) for s in sources_h])
-    
+
 else:
-    
+
     localEnv.Append(
         CPPPATH =  [
             # inc
@@ -121,7 +123,7 @@ else:
             os.path.join('#','openapps','uinject'),
         ],
     )
-    
+
     libopenstack = localEnv.Library(
         target = target,
         source = sources_c,
