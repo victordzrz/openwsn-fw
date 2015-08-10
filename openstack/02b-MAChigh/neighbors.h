@@ -34,9 +34,9 @@ typedef struct {
    open_addr_t      addr_64b;
    dagrank_t        DAGrank;
    int8_t           rssi;
-   uint8_t          numRx;
-   uint8_t          numTx;
-   uint8_t          numTxACK;
+   uint16_t          numRx;
+   uint16_t          numTx;
+   uint16_t          numTxACK;
    uint8_t          numWraps;//number of times the tx counter wraps. can be removed if memory is a restriction. also check openvisualizer then.
    asn_t            asn;
    uint8_t          joinPrio;
@@ -56,12 +56,12 @@ typedef struct {
    int8_t          rssi;
    uint8_t         parentPreference;
    dagrank_t       DAGrank;
-   uint16_t        asn; 
+   uint16_t        asn;
 } netDebugNeigborEntry_t;
 END_PACK
 
 //=========================== module variables ================================
-   
+
 typedef struct {
    neighborRow_t        neighbors[MAXNUMNEIGHBORS];
    dagrank_t            myDAGrank;

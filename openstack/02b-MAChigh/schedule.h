@@ -84,9 +84,9 @@ typedef struct {
    bool            shared;
    uint8_t         channelOffset;
    open_addr_t     neighbor;
-   uint8_t         numRx;
-   uint8_t         numTx;
-   uint8_t         numTxACK;
+   uint16_t         numRx;
+   uint16_t         numTx;
+   uint16_t         numTxACK;
    asn_t           lastUsedAsn;
    void*           next;
 } scheduleEntry_t;
@@ -99,9 +99,9 @@ typedef struct {
    bool            shared;
    uint8_t         channelOffset;
    open_addr_t     neighbor;
-   uint8_t         numRx;
-   uint8_t         numTx;
-   uint8_t         numTxACK;
+   uint16_t         numRx;
+   uint16_t         numTx;
+   uint16_t         numTxACK;
    asn_t           lastUsedAsn;
 } debugScheduleEntry_t;
 END_PACK

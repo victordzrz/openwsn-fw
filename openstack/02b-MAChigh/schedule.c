@@ -728,9 +728,9 @@ void schedule_indicateTx(asn_t* asnTimestamp, bool succesfullTx) {
    DISABLE_INTERRUPTS();
 
    // increment usage statistics
-   if (schedule_vars.currentScheduleEntry->numTx==0xFF) {
-      schedule_vars.currentScheduleEntry->numTx/=2;
-      schedule_vars.currentScheduleEntry->numTxACK/=2;
+   if (schedule_vars.currentScheduleEntry->numTx==0xFFFF) {
+      schedule_vars.currentScheduleEntry->numTx=0;
+      schedule_vars.currentScheduleEntry->numTxACK=0;
    }
    schedule_vars.currentScheduleEntry->numTx++;
    if (succesfullTx==TRUE) {

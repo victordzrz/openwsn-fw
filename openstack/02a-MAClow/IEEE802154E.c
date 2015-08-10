@@ -116,7 +116,7 @@ void ieee154e_init() {
    memset(&ieee154e_vars,0,sizeof(ieee154e_vars_t));
    memset(&ieee154e_dbg,0,sizeof(ieee154e_dbg_t));
 
-   ieee154e_vars.singleChannel     = SYNCHRONIZING_CHANNEL;
+   ieee154e_vars.singleChannel     = 0;
    ieee154e_vars.isAckEnabled      = TRUE;
    ieee154e_vars.isSecurityEnabled = FALSE;
    // default hopping template
@@ -1554,6 +1554,12 @@ port_INLINE void activity_ri5(PORT_RADIOTIMER_WIDTH capturedTime) {
          break;
       }
 
+      //print random byte in the begining
+    //   if(ieee154e_vars.dataReceived->l2_frameType==IEEE154_TYPE_DUMMY){
+    //   memcpy(ieee154e_message,"r%0%",4);
+    //   openserial_messagePutHex(ieee154e_message,1,ieee154e_vars.dataReceived->payload[0]);
+    //   openserial_printMessage(ieee154e_message,4);
+    // }
       // record the timeCorrection and print out at end of slot
       ieee154e_vars.dataReceived->l2_timeCorrection = (PORT_SIGNED_INT_WIDTH)((PORT_SIGNED_INT_WIDTH)TsTxOffset-(PORT_SIGNED_INT_WIDTH)ieee154e_vars.syncCapturedTime);
 

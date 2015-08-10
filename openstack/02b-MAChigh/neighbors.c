@@ -404,10 +404,10 @@ void neighbors_indicateTx(open_addr_t* l2_dest,
       if (isThisRowMatching(l2_dest,i)) {
          // handle roll-over case
 
-          if (neighbors_vars.neighbors[i].numTx>(0xff-numTxAttempts)) {
+          if (neighbors_vars.neighbors[i].numTx>(0xffff-numTxAttempts)) {
               neighbors_vars.neighbors[i].numWraps++; //counting the number of times that tx wraps.
-              neighbors_vars.neighbors[i].numTx/=2;
-              neighbors_vars.neighbors[i].numTxACK/=2;
+              neighbors_vars.neighbors[i].numTx=0;
+              neighbors_vars.neighbors[i].numTxACK=0;
            }
          // update statistics
         neighbors_vars.neighbors[i].numTx += numTxAttempts;

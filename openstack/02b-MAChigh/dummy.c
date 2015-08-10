@@ -7,6 +7,7 @@
 #include "sixtop.h"
 #include "ieee802154_security_driver.h"
 #include "IEEE802154E.h"
+#include "openrandom.h"
 
 
 //=========================== variables =======================================
@@ -34,6 +35,7 @@ void dummy_init(){
 OpenQueueEntry_t * dummy_getPacket(open_addr_t * dest){
   //find dummy with address
   int dummyIndex=0;
+  uint8_t random8;
   for(dummyIndex=0;dummyIndex<MAXDUMMY;dummyIndex++){
     if(packetfunctions_sameAddress(&(dummyList[dummyIndex].l2_nextORpreviousHop), dest) ){
       break;
@@ -44,7 +46,12 @@ OpenQueueEntry_t * dummy_getPacket(open_addr_t * dest){
     openserial_printMessage("ERROR GETTING DUMMY",20);
     return NULL;
   }
-
+  random8=openrandom_get16b() & 0x0F;
+  dummyList[dummyIndex].l2_payload[0]=random8;
+  //print random byte in the begining
+  // memcpy(dummy_message,"r%0%",4);
+  // openserial_messagePutHex(dummy_message,1,random8);
+  // openserial_printMessage(dummy_message,4);
   dummyList[dummyIndex].l2_dsn=sixtop_vars.dsn++;
   dummyList[dummyIndex].l2_numTxAttempts=0;
   return &dummyList[dummyIndex];
