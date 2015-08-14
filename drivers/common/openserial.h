@@ -115,6 +115,10 @@ owerror_t openserial_printPacket(uint8_t* buffer, uint8_t length, uint8_t channe
 owerror_t openserial_printMessage(uint8_t* buffer, uint8_t length);
 void openserial_messagePutHexBuffer(uint8_t * message,int position, uint8_t * hex, int lenght);
 void openserial_messagePutHex(uint8_t * message,int position, uint8_t hex);
+void openserial_messageAppendBuffer(uint8_t * message,uint8_t lenght);
+void openserial_messageAppend(uint8_t message);
+void openserial_messageReset(void);
+void openserial_messageFlush(void);
 uint8_t openserial_getNumDataBytes(void);
 uint8_t openserial_getInputBuffer(uint8_t* bufferToWrite, uint8_t maxNumBytes);
 void    openserial_startInput(void);
