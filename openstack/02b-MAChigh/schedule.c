@@ -519,7 +519,7 @@ void schedule_advanceSlot() {
    DISABLE_INTERRUPTS();
 
    schedule_vars.currentScheduleEntry = schedule_vars.currentScheduleEntry->next;
-
+   //openserial_printMessage(">>",2);
    ENABLE_INTERRUPTS();
 }
 
@@ -535,6 +535,10 @@ slotOffset_t schedule_getNextActiveSlotOffset() {
    res = ((scheduleEntry_t*)(schedule_vars.currentScheduleEntry->next))->slotOffset;
 
    ENABLE_INTERRUPTS();
+
+   //memcpy(schedule_message,"n%0%",4);
+   //openserial_messagePutHex(schedule_message,1,res);
+   //openserial_printMessage(schedule_message,4);
 
    return res;
 }

@@ -890,6 +890,15 @@ port_INLINE void activity_ti1ORri1() {
 
    // check the schedule to see what type of slot this is
    cellType = schedule_getType();
+  //memcpy(ieee154e_message,"a%0%",4);
+  //openserial_messagePutHex(ieee154e_message,1,ieee154e_vars.asn.bytes0and1 & 0xFF);
+  //openserial_printMessage(ieee154e_message,4);
+  //memcpy(ieee154e_message,"o%0%",4);
+  //openserial_messagePutHex(ieee154e_message,1,ieee154e_vars.asnOffset);
+  //openserial_printMessage(ieee154e_message,4);
+  //memcpy(ieee154e_message,"s%0%",4);
+  //openserial_messagePutHex(ieee154e_message,1,ieee154e_vars.slotOffset);
+  //openserial_printMessage(ieee154e_message,4);
    switch (cellType) {
       case CELLTYPE_TXRX:
       case CELLTYPE_TX:
@@ -936,6 +945,7 @@ port_INLINE void activity_ti1ORri1() {
             if (couldSendEB==TRUE) {        // I will be sending an EB
                //copy synch IE  -- should be Little endian???
                // fill in the ASN field of the EB
+              //openserial_printMessage("EB",2);
                ieee154e_getAsn(sync_IE.asn);
                sync_IE.join_priority = (neighbors_getMyDAGrank()/MINHOPRANKINCREASE)-1; //poipoi -- use dagrank(rank)-1
                memcpy(ieee154e_vars.dataToSend->l2_ASNpayload,&sync_IE,sizeof(sync_IE_ht));
@@ -968,7 +978,7 @@ port_INLINE void activity_ti1ORri1() {
          radio_setTimerPeriod(TsSlotDuration*(NUMSERIALRX));
 
          //increase ASN by NUMSERIALRX-1 slots as at this slot is already incremented by 1
-         for (i=0;i<NUMSERIALRX;i++){
+         for (i=0;i<NUMSERIALRX-1;i++){
             incrementAsnOffset();
          }
 #ifdef ADAPTIVE_SYNC
@@ -1020,9 +1030,19 @@ port_INLINE void activity_ti2() {
    packetfunctions_reserveFooterSize(&ieee154e_vars.localCopyForTransmission, 2);
    // calculate the frequency to transmit on
    ieee154e_vars.freq = calculateFrequency(schedule_getChannelOffset());
+   if(idmanager_getIsDAGroot()==TRUE){
+     if(ieee154e_vars.freq==SYNCHRONIZING_CHANNEL &&
+       ieee154e_vars.dataToSend->l2_payloadIEpresent){
+         openserial_printMessage("SYNC",4);
+       }
+       else{
+
+         //ieee154e_printFreq(ieee154e_vars.freq);
+
+       }
+     }
 
    //ieee154e_printFreq(ieee154e_vars.asnOffset);
-   //ieee154e_printFreq(ieee154e_vars.freq);
 
    // configure the radio for that frequency
    radio_setFrequency(ieee154e_vars.freq);
@@ -1293,7 +1313,7 @@ port_INLINE void activity_ti9(PORT_RADIOTIMER_WIDTH capturedTime) {
          // break from the do-while loop and execute the clean-up code below
          break;
       }
-    //  openserial_printMessage("crc",3);
+    // /////openserial_printMessage("crc",3);
 
       // parse the IEEE802.15.4 header (RX ACK)
       ieee802154_retrieveHeader(ieee154e_vars.ackReceived,&ieee802514_header);
@@ -1519,7 +1539,7 @@ port_INLINE void activity_ri5(PORT_RADIOTIMER_WIDTH capturedTime) {
       memcpy(&(ieee154e_vars.dataReceived->l2_nextORpreviousHop),&(ieee802514_header.src),sizeof(open_addr_t));
 
       // if(ieee154e_vars.dataReceived->l2_frameType==IEEE154_TYPE_DUMMY){
-      //   openserial_printMessage("RDUMMY",6);
+      //  //openserial_printMessage("RDUMMY",6);
       // }
       // if security is enabled, decrypt/authenticate the frame.
       if (ieee154e_vars.dataReceived->l2_securityLevel != IEEE154_ASH_SLF_TYPE_NOSEC) {
@@ -1557,8 +1577,8 @@ port_INLINE void activity_ri5(PORT_RADIOTIMER_WIDTH capturedTime) {
       //print random byte in the begining
     //   if(ieee154e_vars.dataReceived->l2_frameType==IEEE154_TYPE_DUMMY){
     //   memcpy(ieee154e_message,"r%0%",4);
-    //   openserial_messagePutHex(ieee154e_message,1,ieee154e_vars.dataReceived->payload[0]);
-    //   openserial_printMessage(ieee154e_message,4);
+    //  //openserial_messagePutHex(ieee154e_message,1,ieee154e_vars.dataReceived->payload[0]);
+    //  //openserial_printMessage(ieee154e_message,4);
     // }
       // record the timeCorrection and print out at end of slot
       ieee154e_vars.dataReceived->l2_timeCorrection = (PORT_SIGNED_INT_WIDTH)((PORT_SIGNED_INT_WIDTH)TsTxOffset-(PORT_SIGNED_INT_WIDTH)ieee154e_vars.syncCapturedTime);
@@ -1844,6 +1864,7 @@ port_INLINE void incrementAsnOffset() {
    } else {
       ieee154e_vars.slotOffset  = (ieee154e_vars.slotOffset+1)%frameLength;
    }
+  //openserial_printMessage("i",1);
    ieee154e_vars.asnOffset   = (ieee154e_vars.asnOffset+1)%16;
 }
 
@@ -2077,7 +2098,7 @@ void notif_sendDone(OpenQueueEntry_t* packetSent, owerror_t error) {
    // record the outcome of the trasmission attempt
    packetSent->l2_sendDoneError   = error;
     // if(packetSent->l2_frameType==IEEE154_TYPE_DUMMY){
-    //   openserial_printMessage("DDUMMY",6);
+    //  //openserial_printMessage("DDUMMY",6);
     // }
    // record the current ASN
    memcpy(&packetSent->l2_asn,&ieee154e_vars.asn,sizeof(asn_t));
@@ -2312,9 +2333,9 @@ bool ieee154e_isSynch(){
 }
 
 void ieee154e_printFreq(uint8_t freq){
-  memcpy(ieee154e_message,"f%0%",4);
-  openserial_messagePutHex(ieee154e_message,1,freq);
-  openserial_printMessage(ieee154e_message,4);
+ memcpy(ieee154e_message,"f%0%",4);
+ openserial_messagePutHex(ieee154e_message,1,freq);
+ openserial_printMessage(ieee154e_message,4);
 
 }
 

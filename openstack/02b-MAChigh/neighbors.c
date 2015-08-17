@@ -6,6 +6,7 @@
 #include "openserial.h"
 #include "IEEE802154E.h"
 #include "dummy.h"
+#include "sixtop.h"
 //=========================== variables =======================================
 
 neighbors_vars_t neighbors_vars;
@@ -653,6 +654,7 @@ void registerNewNeighbor(open_addr_t* address,
          i++;
       }
       dummy_createDummy(address);
+      
       if (i==MAXNUMNEIGHBORS) {
          openserial_printError(COMPONENT_NEIGHBORS,ERR_NEIGHBORS_FULL,
                                (errorparameter_t)MAXNUMNEIGHBORS,

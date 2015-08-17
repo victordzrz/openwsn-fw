@@ -11,6 +11,7 @@
 #include "openqueue.h"
 #include "neighbors.h"
 #include "string.h"
+#include "schedule.h"
 //=========================== defines =========================================
 #define space_conc(str1,str2) #str1 " " #str2
 
@@ -19,9 +20,14 @@ const uint8_t c6t_path0[] = "6t";
 //=========================== variables =======================================
 
 c6t_vars_t c6t_vars;
+uint8_t slot;
+extern schedule_vars_t schedule_vars;
 
 //=========================== prototypes ======================================
-
+void c6t_put16b(
+   char * buf,
+   uint16_t number
+);
 owerror_t c6t_receive(
    OpenQueueEntry_t* msg,
    coap_header_iht*  coap_header,
@@ -68,6 +74,7 @@ owerror_t c6t_receive(
       coap_option_iht*  coap_options
    ) {
 
+   int i;
    owerror_t            outcome;
    open_addr_t          neighbor;
    bool                 foundNeighbor;
@@ -130,6 +137,44 @@ owerror_t c6t_receive(
          outcome                       = E_SUCCESS;
          break;
 
+      case COAP_CODE_REQ_GET:
+        //=== reset packet payload (we will reuse this packetBuffer)
+        msg->payload                     = &(msg->packet[127]);
+        msg->length                      = 0;
+
+        //=== prepare  CoAP response
+        //get slotoffset to show
+
+        for(i=0;i<NUMCELL;i++){
+          while(schedule_vars.scheduleBuf[slot].type==CELLTYPE_OFF){
+            slot=(slot+1)%MAXACTIVESLOTS;
+          }
+          // cell
+          packetfunctions_reserveHeaderSize(msg,1);
+          msg->payload[0]='\n';
+          packetfunctions_reserveHeaderSize(msg,sizeof(schedule_vars.scheduleBuf[slot].numTxACK)*2);
+          c6t_put16b(&msg->payload[0],schedule_vars.scheduleBuf[slot].numTxACK);
+          packetfunctions_reserveHeaderSize(msg,1);
+          msg->payload[0]='/';
+          packetfunctions_reserveHeaderSize(msg,sizeof(schedule_vars.scheduleBuf[slot].numTx)*2);
+          c6t_put16b(&msg->payload[0],schedule_vars.scheduleBuf[slot].numTx);
+          packetfunctions_reserveHeaderSize(msg,1);
+          msg->payload[0]=':';
+          packetfunctions_reserveHeaderSize(msg,sizeof(schedule_vars.scheduleBuf[slot].slotOffset)*2);
+          c6t_put16b(&msg->payload[0],schedule_vars.scheduleBuf[slot].slotOffset);
+          slot=(slot+1)%MAXACTIVESLOTS;
+
+        }
+
+        //payload marker
+        packetfunctions_reserveHeaderSize(msg,1);
+        msg->payload[0] = COAP_PAYLOAD_MARKER;
+
+        // set the CoAP header
+        coap_header->Code                = COAP_CODE_RESP_CONTENT;
+
+        outcome                          = E_SUCCESS;
+         break;
       default:
          outcome = E_FAIL;
          break;
@@ -140,4 +185,12 @@ owerror_t c6t_receive(
 
 void c6t_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
    openqueue_freePacketBuffer(msg);
+}
+
+void c6t_put16b(char * buf, uint16_t number){
+  const char hex[] = "0123456789abcdef";
+  buf[3] = hex[number & 0xF];
+  buf[2] = hex[(number >> 4) & 0xF];
+  buf[1] = hex[(number >> 8) & 0xF];
+  buf[0] = hex[number >> 12];
 }
