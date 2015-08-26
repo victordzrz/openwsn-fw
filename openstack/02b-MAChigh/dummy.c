@@ -113,7 +113,7 @@ void dummy_deleteDummy(open_addr_t * neighbor){
 
 void dummy_reset(OpenQueueEntry_t* dummy) {
   int i;
-  int length=40;
+  int length=100;
   //admin
   dummy->owner                        = COMPONENT_SIXTOP_TO_IEEE802154E;
   dummy->payload                      = &(dummy->packet[127 - IEEE802154_SECURITY_TAG_LEN]); // Footer is longer if security is used

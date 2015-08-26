@@ -24,6 +24,12 @@
 #define MINHOPRANKINCREASE        256  //default value in RPL and Minimal 6TiSCH draft
 
 //=========================== typedef =========================================
+BEGIN_PACK
+typedef struct {
+  int8_t ackRssi;
+  uint8_t lqi;
+} neighborSignal_t;
+END_PACK
 
 BEGIN_PACK
 typedef struct {
@@ -67,6 +73,7 @@ typedef struct {
    dagrank_t            myDAGrank;
    uint8_t              debugRow;
    icmpv6rpl_dio_ht*    dio; //keep it global to be able to debug correctly.
+   neighborSignal_t     signalData[MAXNUMNEIGHBORS];
 } neighbors_vars_t;
 
 //=========================== prototypes ======================================
@@ -101,6 +108,17 @@ void          neighbors_indicateTx(
    bool                 was_finally_acked,
    asn_t*               asnTimestamp
 );
+void          neighbors_notifyAck(
+  open_addr_t*          neighbor,
+  int8_t                rssi,
+  uint8_t               lqi
+);
+
+void neighbors_getSignalData(
+  open_addr_t*          neighbor,
+  neighborSignal_t *    data
+);
+
 void          neighbors_indicateRxDIO(OpenQueueEntry_t* msg);
 
 // get addresses

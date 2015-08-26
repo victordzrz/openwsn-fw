@@ -22,8 +22,13 @@ const uint8_t c6t_path0[] = "6t";
 c6t_vars_t c6t_vars;
 uint8_t slot;
 extern schedule_vars_t schedule_vars;
+extern neighbors_vars_t neighbors_vars;
+
 
 //=========================== prototypes ======================================
+void c6t_put8b(char * buf,
+   int8_t number
+);
 void c6t_put16b(
    char * buf,
    uint16_t number
@@ -78,6 +83,7 @@ owerror_t c6t_receive(
    owerror_t            outcome;
    open_addr_t          neighbor;
    bool                 foundNeighbor;
+   neighborSignal_t     signalData;
 
    switch (coap_header->Code) {
 
@@ -143,10 +149,22 @@ owerror_t c6t_receive(
         msg->length                      = 0;
 
         //=== prepare  CoAP response
-        //get slotoffset to show
 
+        neighbors_getPreferredParentEui64(&neighbor);
+        neighbors_getSignalData(&neighbor,&signalData);
+
+        packetfunctions_reserveHeaderSize(msg,1);
+        msg->payload[0]='\n';
+        packetfunctions_reserveHeaderSize(msg,sizeof(signalData.lqi)*2);
+        c6t_put8b(&msg->payload[0], signalData.lqi);
+        packetfunctions_reserveHeaderSize(msg,1);
+        msg->payload[0]=',';
+        packetfunctions_reserveHeaderSize(msg,sizeof(signalData.ackRssi)*2);
+        c6t_put8b(&msg->payload[0], signalData.ackRssi);
+        //get slotoffset to show
         for(i=0;i<NUMCELL;i++){
-          while(schedule_vars.scheduleBuf[slot].type==CELLTYPE_OFF){
+          //only get TX cells
+          while(schedule_vars.scheduleBuf[slot].type!=CELLTYPE_TX){
             slot=(slot+1)%MAXACTIVESLOTS;
           }
           // cell
@@ -193,4 +211,10 @@ void c6t_put16b(char * buf, uint16_t number){
   buf[2] = hex[(number >> 4) & 0xF];
   buf[1] = hex[(number >> 8) & 0xF];
   buf[0] = hex[number >> 12];
+}
+
+void c6t_put8b(char * buf, int8_t number){
+  const char hex[] = "0123456789abcdef";
+  buf[1] = hex[number & 0xF];
+  buf[0] = hex[(number >> 4) & 0xF];
 }

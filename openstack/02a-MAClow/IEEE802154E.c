@@ -1357,6 +1357,9 @@ port_INLINE void activity_ti9(PORT_RADIOTIMER_WIDTH capturedTime) {
 
       // inform schedule of successful transmission
       schedule_indicateTx(&ieee154e_vars.asn,TRUE);
+      neighbors_notifyAck(&(ieee154e_vars.ackReceived->l2_nextORpreviousHop),
+                          ieee154e_vars.ackReceived->l1_rssi,
+                          ieee154e_vars.ackReceived->l1_lqi);
       //openserial_printMessage("ACK",3);
 
       // inform upper layer
