@@ -47,7 +47,15 @@ void MACLogger_logAck(uint8_t channel,int8_t rssi,uint8_t lqi){
   // else{
   //   entry->lqi=(adjustedLQI+entry->lqi+1)/2;
   // }
+  openserial_messageAppend('%');
+  openserial_messageAppend(rssi);
+  openserial_messageAppend('%');
+  openserial_messageFlush();
   entry->rssiSum+=rssi;
+  openserial_messageAppend('%');
+  openserial_messageAppendBuffer(&(entry->rssiSum),4);
+  openserial_messageAppend('%');
+  openserial_messageFlush();
   adjustedLQI=((255*lqi+10)/20)-1135;
   entry->lqiSum+=adjustedLQI;
   entry->avgCount++;
@@ -56,7 +64,7 @@ void MACLogger_logAck(uint8_t channel,int8_t rssi,uint8_t lqi){
 void MACLogger_getChannelData(uint8_t channel,channelLog_t* data){
   //calculate averages
   MACLogger_channelData[channel].rssi=
-    (MACLogger_channelData[channel].rssiSum +
+    (MACLogger_channelData[channel].rssiSum -
     MACLogger_channelData[channel].avgCount/2) /
     MACLogger_channelData[channel].avgCount;
   MACLogger_channelData[channel].lqi=

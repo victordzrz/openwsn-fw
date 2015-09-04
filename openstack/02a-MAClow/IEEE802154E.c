@@ -1148,10 +1148,7 @@ port_INLINE void activity_ti5(PORT_RADIOTIMER_WIDTH capturedTime) {
    } else {
       // indicate succesful Tx to schedule to keep statistics
       schedule_indicateTx(&ieee154e_vars.asn,TRUE);
-      MACLogger_logTx(ieee154e_vars.freq-11);
-      MACLogger_logAck(ieee154e_vars.freq-11,
-                          ieee154e_vars.ackReceived->l1_rssi,
-                          ieee154e_vars.ackReceived->l1_lqi);      // indicate to upper later the packet was sent successfully
+      // indicate to upper later the packet was sent successfully
       notif_sendDone(ieee154e_vars.dataToSend,E_SUCCESS);
       // reset local variable
       ieee154e_vars.dataToSend = NULL;
@@ -1207,6 +1204,7 @@ port_INLINE void activity_tie5() {
    // indicate transmit failed to schedule to keep stats
    schedule_indicateTx(&ieee154e_vars.asn,FALSE);
    MACLogger_logTx(ieee154e_vars.freq-11);
+
 
    // decrement transmits left counter
    ieee154e_vars.dataToSend->l2_retriesLeft--;
@@ -2291,6 +2289,7 @@ void endSlot() {
       // indicate Tx fail to schedule to update stats
       schedule_indicateTx(&ieee154e_vars.asn,FALSE);
       MACLogger_logTx(ieee154e_vars.freq-11);
+
 
 
       //decrement transmits left counter
