@@ -95,6 +95,7 @@ enum {
    WKP_UDP_ECHO                        =     7,
    WKP_UDP_INJECT                      =  2000,
    WKP_UDP_RINGMASTER                  = 15000,
+   WKP_UDP_MLOG                        = 16792,
 };
 
 //status elements
@@ -170,6 +171,7 @@ enum {
    COMPONENT_RRT                       = 0x25,
    COMPONENT_SECURITY                  = 0x26,
    COMPONENT_DUMMY                     = 0x27,
+   COMPONENT_MLOG                    = 0x28,
 };
 
 /**

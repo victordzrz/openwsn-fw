@@ -9,6 +9,7 @@
 #include "uecho.h"
 #include "uinject.h"
 #include "rrt.h"
+#include "mlog.h"
 
 //=========================== variables =======================================
 
@@ -48,17 +49,20 @@ void openudp_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
 	 //udpprint_sendDone(msg, error);
          rrt_sendDone(msg, error);
          break;
+      case WKP_UDP_MLOG:
+        mlog_sendDone(msg,error);
+        break;
       default:
          openserial_printError(COMPONENT_OPENUDP,ERR_UNSUPPORTED_PORT_NUMBER,
                                (errorparameter_t)msg->l4_sourcePortORicmpv6Type,
                                (errorparameter_t)5);
-         openqueue_freePacketBuffer(msg);         
+         openqueue_freePacketBuffer(msg);
    }
 }
 
 void openudp_receive(OpenQueueEntry_t* msg) {
    uint8_t temp_8b;
-      
+
    msg->owner                      = COMPONENT_OPENUDP;
    if (msg->l4_protocol_compressed==TRUE) {
       // get the UDP header encoding byte
@@ -99,7 +103,7 @@ void openudp_receive(OpenQueueEntry_t* msg) {
       msg->l4_destination_port        = msg->payload[2]*256+msg->payload[3];
       packetfunctions_tossHeader(msg,sizeof(udp_ht));
    }
-   
+
    switch(msg->l4_destination_port) {
       case WKP_UDP_COAP:
          opencoap_receive(msg);
@@ -117,11 +121,14 @@ void openudp_receive(OpenQueueEntry_t* msg) {
       case WKP_UDP_INJECT:
          uinject_receive(msg);
          break;
+      case WKP_UDP_MLOG:
+          mlog_receive(msg);
+         break;
       default:
          openserial_printError(COMPONENT_OPENUDP,ERR_UNSUPPORTED_PORT_NUMBER,
                                (errorparameter_t)msg->l4_destination_port,
                                (errorparameter_t)6);
-         openqueue_freePacketBuffer(msg);         
+         openqueue_freePacketBuffer(msg);
    }
 }
 

@@ -16,6 +16,7 @@ defaultApps   = [
     'uecho',
     'uinject',
     'rrt',
+    'mlog',
 ]
 if localEnv['board']=='python':
     defaultApps  += [
@@ -35,15 +36,15 @@ apps = sorted(list(set(defaultApps+userApps)))
 #===== rule to create a (temporary) openapps_dyn.c file
 
 def dynify(env,target,source):
-    
+
     assert len(target)==1
     assert len(source)==1
-    
+
     target = target[0].abspath
     source = source[0].abspath
-    
+
     #=== create file
-    
+
     dynfile = '''
     #include "opendefs.h"
     {HEADERS_FILES}
@@ -55,14 +56,14 @@ def dynify(env,target,source):
         HEADERS_FILES  = '\n'.join(['#include "{0}.h"'.format(a) for a in apps]),
         INIT_FUNCTIONS = '\n'.join(['   {0}_init();'.format(a) for a in apps]),
     )
-    
+
     # this is a workaround for the fact that leds_init() is called leds__init()
     # which itself it due to possible confusion in the objecticication process
     # between leds_init() and rleds_init()
     dynfile = dynfile.replace('leds_init','leds__init')
-    
+
     #=== write
-    
+
     with open(target,'w') as f:
         f.write(dynfile)
 
@@ -99,25 +100,25 @@ for a in apps:
 #===== build the openapps library
 
 if localEnv['board']=='python':
-    
+
     if userApps:
         raise SystemError("Dynamic app creation not yet supported in simulation mode")
-    
+
     for s in sources_c+sources_h:
         temp = localEnv.Objectify(
             target = localEnv.ObjectifiedFilename(s),
             source = s,
         )
         #localEnv.AlwaysBuild(temp)
-    
+
     libopenapps = localEnv.Library(
         target = target,
         source = [localEnv.ObjectifiedFilename(s) for s in sources_c],
     )
     localEnv.Depends(libopenapps,[localEnv.ObjectifiedFilename(s) for s in sources_h])
-    
+
 else:
-    
+
     localEnv.Append(
         CPPPATH =  [
             # inc
@@ -132,7 +133,7 @@ else:
             os.path.join('#','openapps'),
         ]+[os.path.join('#','openapps',a) for a in apps],
     )
-    
+
     libopenapps = localEnv.Library(
         target = target,
         source = sources_c,

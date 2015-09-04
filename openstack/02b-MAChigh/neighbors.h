@@ -26,13 +26,6 @@
 //=========================== typedef =========================================
 BEGIN_PACK
 typedef struct {
-  int8_t ackRssi;
-  uint8_t lqi;
-} neighborSignal_t;
-END_PACK
-
-BEGIN_PACK
-typedef struct {
    bool             used;
    uint8_t          parentPreference;
    bool             stableNeighbor;
@@ -42,7 +35,7 @@ typedef struct {
    int8_t           rssi;
    uint16_t          numRx;
    uint16_t          numTx;
-   uint16_t          numTxACK;
+   uint8_t          numTxACK;
    uint8_t          numWraps;//number of times the tx counter wraps. can be removed if memory is a restriction. also check openvisualizer then.
    asn_t            asn;
    uint8_t          joinPrio;
@@ -73,7 +66,6 @@ typedef struct {
    dagrank_t            myDAGrank;
    uint8_t              debugRow;
    icmpv6rpl_dio_ht*    dio; //keep it global to be able to debug correctly.
-   neighborSignal_t     signalData[MAXNUMNEIGHBORS];
 } neighbors_vars_t;
 
 //=========================== prototypes ======================================
@@ -102,21 +94,12 @@ void          neighbors_indicateRx(
    bool                 joinPrioPresent,
    uint8_t              joinPrio
 );
+
 void          neighbors_indicateTx(
    open_addr_t*         dest,
    uint8_t              numTxAttempts,
    bool                 was_finally_acked,
    asn_t*               asnTimestamp
-);
-void          neighbors_notifyAck(
-  open_addr_t*          neighbor,
-  int8_t                rssi,
-  uint8_t               lqi
-);
-
-void neighbors_getSignalData(
-  open_addr_t*          neighbor,
-  neighborSignal_t *    data
 );
 
 void          neighbors_indicateRxDIO(OpenQueueEntry_t* msg);

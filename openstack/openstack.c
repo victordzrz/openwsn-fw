@@ -18,6 +18,7 @@
 #include "adaptive_sync.h"
 #include "IEEE802154E.h"
 #include "ieee802154_security_driver.h"
+#include "MACLogger.h"
 //-- 02b-RES
 #include "schedule.h"
 #include "sixtop.h"
@@ -61,6 +62,7 @@ void openstack_init(void) {
    adaptive_sync_init();
    ieee154e_init();
    IEEE802154_SECURITY.init();
+   MACLogger_init();
    //-- 02b-RES
    dummy_init();
    schedule_init();

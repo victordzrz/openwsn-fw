@@ -39,7 +39,7 @@ enum IPHC_TF_enums {
    IPHC_TF_ELIDED            = 3,
 };
 
-enum IPHC_NH_enums {    
+enum IPHC_NH_enums {
    IPHC_NH_INLINE            = 0,
    IPHC_NH_COMPRESSED        = 1,
 };
@@ -160,7 +160,7 @@ wasteful internal fragmentation.
 typedef struct {
    uint8_t    headerlen;               ///< Counter for internal use
    bool       next_header_compressed;
-   uint8_t    lowpan_nhc; 
+   uint8_t    lowpan_nhc;
    uint8_t    nextHeader;
    uint8_t    HdrExtLen;
 } ipv6_hopbyhop_iht;
@@ -186,10 +186,10 @@ END_PACK
 
 void          iphc_init(void);
 owerror_t     iphc_sendFromForwarding(
-   OpenQueueEntry_t*    msg, 
-   ipv6_header_iht*     ipv6_outer_header, 
-   ipv6_header_iht*     ipv6_inner_header, 
-   rpl_option_ht*       rpl_option, 
+   OpenQueueEntry_t*    msg,
+   ipv6_header_iht*     ipv6_outer_header,
+   ipv6_header_iht*     ipv6_inner_header,
+   rpl_option_ht*       rpl_option,
    uint32_t*            flow_label,
    uint8_t              fw_SendOrfw_Rcv
 );

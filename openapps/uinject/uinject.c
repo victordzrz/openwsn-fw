@@ -16,7 +16,7 @@ uinject_vars_t uinject_vars;
 static const uint8_t uinject_dst_addr[]   = {
    0xbb, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
-}; 
+};
 
 //=========================== prototypes ======================================
 
@@ -26,10 +26,10 @@ void uinject_task_cb(void);
 //=========================== public ==========================================
 
 void uinject_init() {
-   
+
    // clear local variables
    memset(&uinject_vars,0,sizeof(uinject_vars_t));
-   
+
    // start periodic timer
    uinject_vars.timerId                    = opentimers_start(
       UINJECT_PERIOD_MS,
@@ -43,7 +43,7 @@ void uinject_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
 }
 
 void uinject_receive(OpenQueueEntry_t* pkt) {
-   
+
    openqueue_freePacketBuffer(pkt);
    
    openserial_printError(
@@ -61,24 +61,24 @@ void uinject_receive(OpenQueueEntry_t* pkt) {
    task to scheduler with CoAP priority, and let scheduler take care of it.
 */
 void uinject_timer_cb(opentimer_id_t id){
-   
+
    scheduler_push_task(uinject_task_cb,TASKPRIO_COAP);
 }
 
 void uinject_task_cb() {
    OpenQueueEntry_t*    pkt;
-   
+
    // don't run if not synch
    if (ieee154e_isSynch() == FALSE) return;
-   
+
    // don't run on dagroot
    if (idmanager_getIsDAGroot()) {
       opentimers_stop(uinject_vars.timerId);
       return;
    }
-   
+
    // if you get here, send a packet
-   
+
    // get a free packet buffer
    pkt = openqueue_getFreePacketBuffer(COMPONENT_UINJECT);
    if (pkt==NULL) {
@@ -90,7 +90,7 @@ void uinject_task_cb() {
       );
       return;
    }
-   
+
    pkt->owner                         = COMPONENT_UINJECT;
    pkt->creator                       = COMPONENT_UINJECT;
    pkt->l4_protocol                   = IANA_UDP;
@@ -98,10 +98,10 @@ void uinject_task_cb() {
    pkt->l4_sourcePortORicmpv6Type     = WKP_UDP_INJECT;
    pkt->l3_destinationAdd.type        = ADDR_128B;
    memcpy(&pkt->l3_destinationAdd.addr_128b[0],uinject_dst_addr,16);
-   
+
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
    *((uint16_t*)&pkt->payload[0]) = uinject_vars.counter++;
-   
+
    if ((openudp_send(pkt))==E_FAIL) {
       openqueue_freePacketBuffer(pkt);
    }

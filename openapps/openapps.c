@@ -8,6 +8,7 @@
 
 // CoAP
 #include "c6t.h"
+#include "mlog.h"
 #include "cinfo.h"
 #include "cleds.h"
 #include "cstorm.h"

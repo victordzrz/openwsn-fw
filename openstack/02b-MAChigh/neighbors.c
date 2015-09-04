@@ -56,27 +56,6 @@ dagrank_t neighbors_getMyDAGrank() {
    return neighbors_vars.myDAGrank;
 }
 
-void neighbors_notifyAck(open_addr_t* neighbor,int8_t rssi,uint8_t lqi){
-  int i;
-  for(i=0;i<MAXNUMNEIGHBORS;i++){
-    if(packetfunctions_sameAddress(&neighbors_vars.neighbors[i].addr_64b,neighbor)){
-      if(neighbors_vars.signalData[i].ackRssi==0){
-        neighbors_vars.signalData[i].ackRssi=rssi;
-      }
-      else{
-        neighbors_vars.signalData[i].ackRssi=(rssi+neighbors_vars.signalData[i].ackRssi)/2;
-      }
-      if(neighbors_vars.signalData[i].lqi==0){
-        neighbors_vars.signalData[i].lqi=lqi;
-      }
-      else{
-        neighbors_vars.signalData[i].lqi=(lqi+neighbors_vars.signalData[i].lqi)/2;
-      }
-      break;
-    }
-  }
-}
-
 /**
 \brief Retrieve the number of neighbors this mote's currently knows of.
 
@@ -600,18 +579,6 @@ void  neighbors_removeOld() {
    }
 }
 
-void neighbors_getSignalData(open_addr_t* neighbor,neighborSignal_t * data){
-  int neighborIndex;
-  for(neighborIndex=0;neighborIndex<MAXNUMNEIGHBORS;neighborIndex++){
-    if(packetfunctions_sameAddress(&neighbors_vars.neighbors[neighborIndex].addr_64b,neighbor)){
-      break;
-    }
-  }
-  *data=neighbors_vars.signalData[neighborIndex];
-  neighbors_vars.signalData[neighborIndex].lqi=0;
-  neighbors_vars.signalData[neighborIndex].ackRssi=0;
-
-}
 
 //===== debug
 
@@ -666,8 +633,6 @@ void registerNewNeighbor(open_addr_t* address,
             neighbors_vars.neighbors[i].numRx                  = 1;
             neighbors_vars.neighbors[i].numTx                  = 0;
             neighbors_vars.neighbors[i].numTxACK               = 0;
-            neighbors_vars.signalData[i].lqi                      = 0;
-            neighbors_vars.signalData[i].ackRssi                  = 0;
             memcpy(&neighbors_vars.neighbors[i].asn,asnTimestamp,sizeof(asn_t));
             //update jp
             if (joinPrioPresent==TRUE){
@@ -727,8 +692,6 @@ void removeNeighbor(uint8_t neighborIndex) {
    neighbors_vars.neighbors[neighborIndex].asn.bytes0and1            = 0;
    neighbors_vars.neighbors[neighborIndex].asn.bytes2and3            = 0;
    neighbors_vars.neighbors[neighborIndex].asn.byte4                 = 0;
-   neighbors_vars.signalData[neighborIndex].lqi                      = 0;
-   neighbors_vars.signalData[neighborIndex].ackRssi                  = 0;
 }
 
 //=========================== helpers =========================================

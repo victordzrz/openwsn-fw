@@ -14,16 +14,13 @@
 
 OpenQueueEntry_t dummyList[MAXDUMMY];
 extern sixtop_vars_t sixtop_vars;
-uint8_t dummy_message[20];
 
 
 //=========================== prototypes ======================================
 
-void dummy_reset(OpenQueueEntry_t *);
-
 //=========================== public ==========================================
 
-void dummy_init(){
+void dummy_init(void){
   int j;
 
   for(j=0;j<MAXDUMMY;j++){
@@ -32,7 +29,7 @@ void dummy_init(){
 
 }
 
-OpenQueueEntry_t * dummy_getPacket(open_addr_t * dest){
+OpenQueueEntry_t* dummy_getPacket(open_addr_t* dest){
   //find dummy with address
   int dummyIndex=0;
   uint8_t random8;
@@ -49,16 +46,13 @@ OpenQueueEntry_t * dummy_getPacket(open_addr_t * dest){
   random8=openrandom_get16b() & 0x0F;
   dummyList[dummyIndex].l2_payload[0]=random8;
   //print random byte in the begining
-  // memcpy(dummy_message,"r%0%",4);
-  // openserial_messagePutHex(dummy_message,1,random8);
-  // openserial_printMessage(dummy_message,4);
   dummyList[dummyIndex].l2_dsn=sixtop_vars.dsn++;
   dummyList[dummyIndex].l2_numTxAttempts=0;
   return &dummyList[dummyIndex];
 }
 
 
-void dummy_createDummy(open_addr_t * neighbor){
+void dummy_createDummy(open_addr_t* neighbor){
   //find dummy without address
   int dummyIndex=0;
   for(dummyIndex=0;dummyIndex<MAXDUMMY;dummyIndex++){
@@ -81,14 +75,15 @@ void dummy_createDummy(open_addr_t * neighbor){
                               FALSE,
                               dummyList[dummyIndex].l2_dsn,
                               &dummyList[dummyIndex].l2_nextORpreviousHop);
-  memcpy(dummy_message,"create %00000000%",17);
-  openserial_messagePutHexBuffer(dummy_message,7,
-    &dummyList[dummyIndex].l2_nextORpreviousHop.addr_64b[0],8);
-  openserial_printMessage(dummy_message,17);
+
+  openserial_messageAppendBuffer("create %",8);
+  openserial_messageAppendBuffer(&dummyList[dummyIndex].l2_nextORpreviousHop.addr_64b[0],8);
+  openserial_messageAppend('%');
+  openserial_messageFlush();
   return;
 
 }
-void dummy_deleteDummy(open_addr_t * neighbor){
+void dummy_deleteDummy(open_addr_t* neighbor){
   //find dummy with address
   int dummyIndex=0;
   for(dummyIndex=0;dummyIndex<MAXDUMMY;dummyIndex++){
@@ -97,7 +92,7 @@ void dummy_deleteDummy(open_addr_t * neighbor){
     }
   }
   if(dummyIndex>=MAXDUMMY){
-    openserial_printMessage("ERROR CREATING DUMMY",20);
+    openserial_printMessage("ERROR DELETING DUMMY",20);
     return;
   }
 
@@ -109,7 +104,6 @@ void dummy_deleteDummy(open_addr_t * neighbor){
 }
 
 
-//=========================== private =========================================
 
 void dummy_reset(OpenQueueEntry_t* dummy) {
   int i;
@@ -152,3 +146,5 @@ void dummy_reset(OpenQueueEntry_t* dummy) {
   dummy->l2_keyIndex=IEEE802154_SECURITY_K2_KEY_INDEX;
   dummy->l1_txPower=TX_POWER;
 }
+
+//=========================== private =========================================

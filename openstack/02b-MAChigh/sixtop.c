@@ -21,7 +21,7 @@
 //=========================== variables =======================================
 
 sixtop_vars_t sixtop_vars;
-uint8_t * sixtop_message[20];
+uint8_t* sixtop_message[20];
 
 //=========================== prototypes ======================================
 

@@ -17,6 +17,7 @@
 #include "adaptive_sync.h"
 #include "processIE.h"
 #include "dummy.h"
+#include "MACLogger.h"
 
 //=========================== variables =======================================
 
@@ -26,7 +27,7 @@ ieee154e_dbg_t     ieee154e_dbg;
 uint8_t ieee154e_message[20];
 
 //=========================== prototypes ======================================
-void ieee154e_sendDummy(open_addr_t * dest);
+void ieee154e_sendDummy(open_addr_t* dest);
 void ieee154e_printFreq(uint8_t freq);
 
 // SYNCHRONIZING
@@ -1147,7 +1148,10 @@ port_INLINE void activity_ti5(PORT_RADIOTIMER_WIDTH capturedTime) {
    } else {
       // indicate succesful Tx to schedule to keep statistics
       schedule_indicateTx(&ieee154e_vars.asn,TRUE);
-      // indicate to upper later the packet was sent successfully
+      MACLogger_logTx(ieee154e_vars.freq-11);
+      MACLogger_logAck(ieee154e_vars.freq-11,
+                          ieee154e_vars.ackReceived->l1_rssi,
+                          ieee154e_vars.ackReceived->l1_lqi);      // indicate to upper later the packet was sent successfully
       notif_sendDone(ieee154e_vars.dataToSend,E_SUCCESS);
       // reset local variable
       ieee154e_vars.dataToSend = NULL;
@@ -1202,6 +1206,7 @@ port_INLINE void activity_ti7() {
 port_INLINE void activity_tie5() {
    // indicate transmit failed to schedule to keep stats
    schedule_indicateTx(&ieee154e_vars.asn,FALSE);
+   MACLogger_logTx(ieee154e_vars.freq-11);
 
    // decrement transmits left counter
    ieee154e_vars.dataToSend->l2_retriesLeft--;
@@ -1357,7 +1362,8 @@ port_INLINE void activity_ti9(PORT_RADIOTIMER_WIDTH capturedTime) {
 
       // inform schedule of successful transmission
       schedule_indicateTx(&ieee154e_vars.asn,TRUE);
-      neighbors_notifyAck(&(ieee154e_vars.ackReceived->l2_nextORpreviousHop),
+      MACLogger_logTx(ieee154e_vars.freq-11);
+      MACLogger_logAck(ieee154e_vars.freq-11,
                           ieee154e_vars.ackReceived->l1_rssi,
                           ieee154e_vars.ackReceived->l1_lqi);
       //openserial_printMessage("ACK",3);
@@ -2284,6 +2290,8 @@ void endSlot() {
 
       // indicate Tx fail to schedule to update stats
       schedule_indicateTx(&ieee154e_vars.asn,FALSE);
+      MACLogger_logTx(ieee154e_vars.freq-11);
+
 
       //decrement transmits left counter
       ieee154e_vars.dataToSend->l2_retriesLeft--;
@@ -2342,7 +2350,7 @@ void ieee154e_printFreq(uint8_t freq){
 
 }
 
-void ieee154e_sendDummy(open_addr_t * dest){
+void ieee154e_sendDummy(open_addr_t* dest){
   //openserial_printMessage("SDUMMY",6);
   ieee154e_vars.dataToSend=dummy_getPacket(dest);
   //memcpy(ieee154e_message,"MS/%0%",6);
