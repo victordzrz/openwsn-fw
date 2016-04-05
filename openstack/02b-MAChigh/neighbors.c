@@ -543,8 +543,9 @@ void neighbors_updateMyDAGrankAndNeighborPreference() {
             rankIncreaseIntermediary = (rankIncreaseIntermediary * 2 * MINHOPRANKINCREASE) / ((uint32_t)neighbors_vars.neighbors[i].numTxACK);
             rankIncrease = (uint16_t)(rankIncreaseIntermediary >> 10);
          }
-
-         tentativeDAGrank = neighbors_vars.neighbors[i].DAGrank+rankIncrease;
+         
+         // cast the uint16_t summands to avoid an overflow if DAGrank == 0xFFFF (MAXDAGRANK)
+         tentativeDAGrank = (uint32_t)neighbors_vars.neighbors[i].DAGrank + (uint32_t)rankIncrease;
          if ( tentativeDAGrank<neighbors_vars.myDAGrank &&
               tentativeDAGrank<MAXDAGRANK) {
             // found better parent, lower my DAGrank
