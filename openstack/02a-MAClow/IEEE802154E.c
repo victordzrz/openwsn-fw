@@ -124,6 +124,8 @@ void ieee154e_init() {
        chTemplate_default,
        sizeof(ieee154e_vars.chTemplate)
    );
+   ieee154e_vars.chTemplateLength=16;
+   ieee154e_vars.chTemplateId=0;
 
    if (idmanager_getIsDAGroot()==TRUE) {
       changeIsSync(TRUE);
@@ -775,9 +777,7 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
 
                case IEEE802154E_MLME_CHANNELHOPPING_IE_SUBID:
                   if (idmanager_getIsDAGroot()==FALSE) {
-                      // timelsot template ID
-                      channelhoppingTemplateIDStoreFromEB(*((uint8_t*)(pkt->payload)+ptr));
-                      ptr = ptr + 1;
+                      processIE_retrieveChannelHoppingIE(pkt,ptr);
                   }
                   break;
                default:
