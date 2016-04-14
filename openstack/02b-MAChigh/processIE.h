@@ -40,8 +40,8 @@ typedef struct {
 \brief Header of header IEs.
 */
 typedef struct{
-   uint16_t length_elementid_type; 
-} header_IE_ht; 
+   uint16_t length_elementid_type;
+} header_IE_ht;
 
 /**
 \brief Header of payload IEs.
@@ -126,7 +126,7 @@ typedef struct{
    cellInfo_ht     cellList[SCHEDULEIEMAXNUMCELLS];
 } schedule_IE_ht;
 
-END_PACK
+
 
 //=========================== variables =======================================
 
@@ -137,7 +137,7 @@ void             processIE_prependMLMEIE(
    uint8_t              len
 );
 void             processIE_prepend_sixtopIE(
-   OpenQueueEntry_t*    pkt, 
+   OpenQueueEntry_t*    pkt,
    uint8_t              len
 );
 //===== prepend IEs
@@ -175,12 +175,18 @@ uint8_t           processIE_prepend_sixCelllist(
 void             processIE_retrieveSlotframeLinkIE(
    OpenQueueEntry_t*    pkt,
    uint8_t * ptr
-); 
+);
 void            processIE_retrieve_sixCelllist(
     OpenQueueEntry_t*   pkt,
     uint8_t             ptr,
     uint8_t             length,
     cellInfo_ht*        cellList
 );
+
+uint8_t          processIE_retrieveChannelHoppingIE(
+    OpenQueueEntry_t*    pkt,
+    uint8_t * ptr
+);
+
 
 #endif

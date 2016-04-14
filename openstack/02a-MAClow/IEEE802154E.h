@@ -33,6 +33,7 @@ static const uint8_t chTemplate_default[] = {
 #define LIMITLARGETIMECORRECTION     5 // threshold number of ticks to declare a timeCorrection "large"
 #define LENGTH_IEEE154_MAX         128 // max length of a valid radio packet
 #define DUTY_CYCLE_WINDOW_LIMIT    (0xFFFFFFFF>>1) // limit of the dutycycle window
+#define MAX_CH_TEMPLATE_LENGTH      32// Up to 32 hops in the channel hopping list.
 
 //15.4e information elements related
 #define IEEE802154E_PAYLOAD_DESC_LEN_SHIFT                 0x04
@@ -236,7 +237,9 @@ typedef struct {
    uint8_t                   asnOffset;               // offset inside the frame
    uint8_t                   singleChannel;           // the single channel used for transmission
    bool                      singleChannelChanged;    // detect id singleChannelChanged
-   uint8_t                   chTemplate[16];          // storing the template of hopping sequence
+   uint16_t                  chTemplateLength;
+   uint8_t                   chTemplate[MAX_CH_TEMPLATE_LENGTH];          // storing the template of hopping sequence
+   bool                      chTemplateChanged;
    // template ID
    uint8_t                   tsTemplateId;            // timeslot template id
    uint8_t                   chTemplateId;            // channel hopping tempalte id
@@ -250,8 +253,8 @@ typedef struct {
    bool                      isSecurityEnabled;       // whether security is applied
    // time correction
    int16_t                   timeCorrection;          // store the timeCorrection, prepend and retrieve it inside of frame header
-   
-   uint16_t                  slotDuration;            // 
+
+   uint16_t                  slotDuration;            //
 } ieee154e_vars_t;
 
 BEGIN_PACK
@@ -286,7 +289,12 @@ void               ieee154e_setSingleChannel(uint8_t channel);
 void               ieee154e_setIsSecurityEnabled(bool isEnabled);
 void               ieee154e_setSlotDuration(uint16_t duration);
 uint16_t           ieee154e_getSlotDuration();
-
+void               ieee154e_getHoppingSequence(uint8_t* sequence,
+                                               uint16_t* length,
+                                               uint16_t* id);
+void               ieee154e_setHoppingSequence(uint8_t* sequence,
+                                               uint16_t length,
+                                               uint16_t id);
 uint16_t           ieee154e_getTimeCorrection(void);
 // events
 void               ieee154e_startOfFrame(PORT_RADIOTIMER_WIDTH capturedTime);

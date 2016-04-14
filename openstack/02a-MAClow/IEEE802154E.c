@@ -116,7 +116,7 @@ void ieee154e_init() {
    // initialize variables
    memset(&ieee154e_vars,0,sizeof(ieee154e_vars_t));
    memset(&ieee154e_dbg,0,sizeof(ieee154e_dbg_t));
-   
+
    // to easy debug, by default we use signle channel to communication
    // set singleChannel to 0 to enable channel hopping.
    ieee154e_vars.singleChannel     = 0;
@@ -986,7 +986,7 @@ port_INLINE void activity_ti1ORri1() {
          //this is to emulate a set of serial input slots without having the slotted structure.
 
          radio_setTimerPeriod(ieee154e_vars.slotDuration*(NUMSERIALRX));
-         
+
          //increase ASN by NUMSERIALRX-1 slots as at this slot is already incremented by 1
          for (i=0;i<NUMSERIALRX-1;i++){
             incrementAsnOffset();
@@ -2011,6 +2011,24 @@ port_INLINE void timeslotTemplateIDStoreFromEB(uint8_t id){
 port_INLINE void channelhoppingTemplateIDStoreFromEB(uint8_t id){
     ieee154e_vars.chTemplateId = id;
 }
+
+void ieee154e_getHoppingSequence(uint8_t* sequence, uint16_t* length, uint16_t* id){
+    memcpy(sequence,
+          &(ieee154e_vars.chTemplate[0]),
+          ieee154e_vars.chTemplateLength);
+    *length=ieee154e_vars.chTemplateLength;
+    *id=ieee154e_vars.chTemplateId;
+}
+
+
+void ieee154e_setHoppingSequence(uint8_t* sequence,uint16_t length, uint16_t id){
+  memcpy(&(ieee154e_vars.chTemplate[0]),
+        sequence,
+        ieee154e_vars.chTemplateLength);
+  ieee154e_vars.chTemplateLength=length;
+  ieee154e_vars.chTemplateId=id;
+}
+
 //======= synchronization
 
 void synchronizePacket(PORT_RADIOTIMER_WIDTH timeReceived) {
@@ -2027,7 +2045,7 @@ void synchronizePacket(PORT_RADIOTIMER_WIDTH timeReceived) {
    timeCorrection                 =  (PORT_SIGNED_INT_WIDTH)((PORT_SIGNED_INT_WIDTH)timeReceived-(PORT_SIGNED_INT_WIDTH)TsTxOffset);
 
    newPeriod                      =  ieee154e_vars.slotDuration;
-   
+
    // detect whether I'm too close to the edge of the slot, in that case,
    // skip a slot and increase the temporary slot length to be 2 slots long
    if (currentValue<timeReceived || currentPeriod-currentValue<RESYNCHRONIZATIONGUARD) {
