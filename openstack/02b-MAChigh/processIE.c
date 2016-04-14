@@ -248,9 +248,10 @@ port_INLINE uint8_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
    extendedBitmapLength=0;
    current_hop=0;
 
+   printHoppingTemplate(sequence_list,sequence_length);
+
 
    len = 0;
-
 
    //reserve space for current hop
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
@@ -531,4 +532,13 @@ port_INLINE void processIE_retrieve_sixCelllist(
         cellList[i].linkoptions = CELLTYPE_TX;
         i++;
     }
+}
+
+
+void printHoppingTemplate(uint8_t* sequence, uint16_t length){
+  uint8_t sequenceMessage[30];
+  openserial_messagePutHexBuffer(sequenceMessage,0,&length,2);
+  openserial_printMessage(sequenceMessage,2+2);
+  openserial_messagePutHexBuffer(sequenceMessage,0,sequence,length);
+  openserial_printMessage(sequenceMessage,length+2);
 }

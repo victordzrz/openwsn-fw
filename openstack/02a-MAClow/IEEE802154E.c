@@ -24,7 +24,7 @@
 ieee154e_vars_t    ieee154e_vars;
 ieee154e_stats_t   ieee154e_stats;
 ieee154e_dbg_t     ieee154e_dbg;
-uint8_t ieee154e_message[20];
+uint8_t ieee154e_message[30];
 
 //=========================== prototypes ======================================
 void ieee154e_sendDummy(open_addr_t* dest);
@@ -129,6 +129,8 @@ void ieee154e_init() {
        chTemplate_default,
        sizeof(ieee154e_vars.chTemplate)
    );
+   ieee154e_vars.chTemplateLength=16;
+   ieee154e_vars.chTemplateId=0;
 
    if (idmanager_getIsDAGroot()==TRUE) {
       changeIsSync(TRUE);
@@ -2013,6 +2015,10 @@ port_INLINE void channelhoppingTemplateIDStoreFromEB(uint8_t id){
 }
 
 void ieee154e_getHoppingSequence(uint8_t* sequence, uint16_t* length, uint16_t* id){
+    //openserial_messagePutHexBuffer(ieee154e_message,0,&ieee154e_vars.chTemplateLength,2);
+    //openserial_printMessage(ieee154e_message,2+2);
+    //openserial_messagePutHexBuffer(ieee154e_message,0,&(ieee154e_vars.chTemplate[0]),length);
+    //openserial_printMessage(ieee154e_message,length+2);
     memcpy(sequence,
           &(ieee154e_vars.chTemplate[0]),
           ieee154e_vars.chTemplateLength);
