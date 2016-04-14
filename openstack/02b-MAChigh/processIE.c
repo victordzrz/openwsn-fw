@@ -16,44 +16,44 @@
 //=========================== public ==========================================
 
 port_INLINE void processIE_prependMLMEIE(
-      OpenQueueEntry_t* pkt, 
+      OpenQueueEntry_t* pkt,
       uint8_t           len
    ){
    payload_IE_ht payload_IE_desc;
-   
+
    // reserve space
    packetfunctions_reserveHeaderSize(
-      pkt, 
+      pkt,
       sizeof(payload_IE_ht)
    );
-   
+
    // prepare header
    payload_IE_desc.length_groupid_type = len;
-   payload_IE_desc.length_groupid_type |= 
-      (IEEE802154E_PAYLOAD_DESC_GROUP_ID_MLME  | IEEE802154E_PAYLOAD_DESC_TYPE_MLME); 
-   
+   payload_IE_desc.length_groupid_type |=
+      (IEEE802154E_PAYLOAD_DESC_GROUP_ID_MLME  | IEEE802154E_PAYLOAD_DESC_TYPE_MLME);
+
    // copy header
    pkt->payload[0] = payload_IE_desc.length_groupid_type        & 0xFF;
    pkt->payload[1] = (payload_IE_desc.length_groupid_type >> 8) & 0xFF;
 }
 
 port_INLINE void processIE_prepend_sixtopIE(
-      OpenQueueEntry_t* pkt, 
+      OpenQueueEntry_t* pkt,
       uint8_t           len
    ){
    payload_IE_ht payload_IE_desc;
-   
+
    // reserve space
    packetfunctions_reserveHeaderSize(
-      pkt, 
+      pkt,
       sizeof(payload_IE_ht)
    );
-   
+
    // prepare header
    payload_IE_desc.length_groupid_type = len;
-   payload_IE_desc.length_groupid_type |= 
-      (IANA_6TOP_IE_GROUP_ID  | IANA_6TOP_IE_GROUP_ID_TYPE); 
-   
+   payload_IE_desc.length_groupid_type |=
+      (IANA_6TOP_IE_GROUP_ID  | IANA_6TOP_IE_GROUP_ID_TYPE);
+
    // copy header
    pkt->payload[0] = payload_IE_desc.length_groupid_type        & 0xFF;
    pkt->payload[1] = (payload_IE_desc.length_groupid_type >> 8) & 0xFF;
@@ -64,44 +64,44 @@ port_INLINE void processIE_prepend_sixtopIE(
 port_INLINE uint8_t processIE_prependSyncIE(OpenQueueEntry_t* pkt){
    mlme_IE_ht mlme_subHeader;
    uint8_t    len;
-  
+
    len = 0;
-  
+
    //=== sync IE
-   
+
    // reserve space
    packetfunctions_reserveHeaderSize(
       pkt,
       sizeof(sync_IE_ht)
    );
-   
+
    // Keep a pointer to where the ASN will be
    // Note: the actual value of the current ASN and JP will be written by the
    //    IEEE802.15.4e when transmitting
-   pkt->l2_ASNpayload               = pkt->payload; 
-   
+   pkt->l2_ASNpayload               = pkt->payload;
+
    len += sizeof(sync_IE_ht);
-  
+
    //=== MLME IE
-  
+
    // reserve space
    packetfunctions_reserveHeaderSize(
       pkt,
       sizeof(mlme_IE_ht)
    );
-   
+
    // prepare header
    mlme_subHeader.length_subID_type = sizeof(sync_IE_ht);
-   mlme_subHeader.length_subID_type |= 
+   mlme_subHeader.length_subID_type |=
       (IEEE802154E_MLME_SYNC_IE_SUBID << IEEE802154E_MLME_SYNC_IE_SUBID_SHIFT)|
       IEEE802154E_DESC_TYPE_SHORT;
-   
+
    // copy header
    pkt->payload[0]= mlme_subHeader.length_subID_type        & 0xFF;
    pkt->payload[1]= (mlme_subHeader.length_subID_type >> 8) & 0xFF;
-   
+
    len += 2;
-   
+
    return len;
 }
 
@@ -112,18 +112,18 @@ port_INLINE uint8_t processIE_prependSlotframeLinkIE(OpenQueueEntry_t* pkt){
    slotOffset_t      slotOffset;
    slotOffset_t      lastSlotOffset;
    frameLength_t     frameLength;
-  
+
    len            = 0;
    linkOption     = 0;
    lastSlotOffset = SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET + SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS;
-   
+
    // for each link in the default schedule, add:
    // - [1B] linkOption bitmap
    // - [2B] channel offset
    // - [2B] timeslot
- 
+
    //===== shared cells
-   
+
    linkOption = (1<<FLAG_TX_S)|(1<<FLAG_RX_S)|(1<<FLAG_SHARED_S)|(1<<FLAG_TIMEKEEPING_S);
    for (slotOffset=lastSlotOffset;slotOffset>SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET;slotOffset--) {
       packetfunctions_reserveHeaderSize(pkt,5);
@@ -134,58 +134,58 @@ port_INLINE uint8_t processIE_prependSlotframeLinkIE(OpenQueueEntry_t* pkt){
       pkt->payload[4]   = linkOption;                          // linkOption
       len+=5;
    }
-   
+
    //===== slotframe IE header
-   
+
    // - [1B] number of links (6)
    // - [2B] Slotframe Size (101)
    // - [1B] slotframe handle (id)
    frameLength = schedule_getFrameLength();
    packetfunctions_reserveHeaderSize(pkt,5);
-   pkt->payload[0] = schedule_getFrameNumber();  
+   pkt->payload[0] = schedule_getFrameNumber();
    pkt->payload[1] = schedule_getFrameHandle();
    pkt->payload[2] =  frameLength       & 0xFF;
    pkt->payload[3] = (frameLength >> 8) & 0xFF;
    pkt->payload[4] = SCHEDULE_MINIMAL_6TISCH_ACTIVE_CELLS; //number of links
-  
+
    len+=5;
-   
+
    //===== MLME IE header
    // - [1b] 15 short ==0x00
    // - [7b] 8-14 Sub-ID=0x1b
    // - [8b] Length
-   
+
    // reserve space
    packetfunctions_reserveHeaderSize(
       pkt,
       sizeof(mlme_IE_ht)
    );
-   
+
    // prepare header
    mlme_subHeader.length_subID_type = len;
-   mlme_subHeader.length_subID_type |= 
-      (IEEE802154E_MLME_SLOTFRAME_LINK_IE_SUBID << 
+   mlme_subHeader.length_subID_type |=
+      (IEEE802154E_MLME_SLOTFRAME_LINK_IE_SUBID <<
          IEEE802154E_MLME_SLOTFRAME_LINK_IE_SUBID_SHIFT) |
       IEEE802154E_DESC_TYPE_SHORT;
-  
+
    // copy header
    pkt->payload[0]= mlme_subHeader.length_subID_type        & 0xFF;
    pkt->payload[1]= (mlme_subHeader.length_subID_type >> 8) & 0xFF;
-   
+
    len+=2;
-   
+
    return len;
 }
 
 port_INLINE uint8_t processIE_prependTSCHTimeslotIE(OpenQueueEntry_t* pkt){
    uint8_t    len;
    mlme_IE_ht mlme_subHeader;
-   
+
    uint16_t    duration;
-   
+
    len = 0;
    duration = ieee154e_getSlotDuration();
-   
+
    if (duration==328){
        // reserve space for timeslot template ID
        packetfunctions_reserveHeaderSize(pkt,sizeof(uint8_t));
@@ -204,56 +204,134 @@ port_INLINE uint8_t processIE_prependTSCHTimeslotIE(OpenQueueEntry_t* pkt){
        *((uint8_t*)(pkt->payload)) = 1;
        len+=3;
    }
-   
+
    //===== MLME IE header
-   
+
    // reserve space
    packetfunctions_reserveHeaderSize(pkt, sizeof(mlme_IE_ht));
-   
+
    // prepare header
    mlme_subHeader.length_subID_type  = len;
-   mlme_subHeader.length_subID_type |= 
+   mlme_subHeader.length_subID_type |=
       IEEE802154E_MLME_TIMESLOT_IE_SUBID << IEEE802154E_MLME_TIMESLOT_IE_SUBID_SHIFT|
       IEEE802154E_DESC_TYPE_SHORT;
-   
+
    // copy header
    pkt->payload[0] = mlme_subHeader.length_subID_type        & 0xFF;
    pkt->payload[1] = (mlme_subHeader.length_subID_type >> 8) & 0xFF;
-   
+
    len += 2;
-  
+
    return len;
 }
 port_INLINE uint8_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
    uint8_t    len;
+   uint8_t extendedBitmapLength;
    mlme_IE_ht mlme_subHeader;
-   
+
+   //Hopping IE values
+   uint8_t hopping_sequence_id;
+   uint8_t channel_page;
+   uint16_t number_of_channels;
+   uint32_t phy_config;;
+   uint16_t sequence_length;
+   uint8_t sequence_list[MAX_CH_TEMPLATE_LENGTH];
+   uint16_t current_hop;
+
+   ieee154e_getHoppingSequence(&(sequence_list[0]),
+                               &sequence_length,
+                               &hopping_sequence_id);
+   //prepare IE
+   channel_page=0;
+   number_of_channels=16;
+   phy_config=0;
+   //todo Calculate extendedBitmapLength
+   extendedBitmapLength=0;
+   current_hop=0;
+
+
    len = 0;
+
+
+   //reserve space for current hop
+   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
+
+
+   *((uint16_t*)(pkt->payload)) = current_hop;
+
+   len+=2;
+
+   //reserve space for hopping sequence
+   packetfunctions_reserveHeaderSize(pkt,sizeof(sequence_length));
+
+   memcpy(
+       pkt->payload,
+       sequence_list,
+       sequence_length
+   );
+
+   len+=sequence_length;
+
+
+   //reserve space for hopping sequence length
+   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
+
+   *((uint16_t*)(pkt->payload)) = sequence_length;
+
+   len+=2;
+
+
+    //TODO extended bitmap length=0
+    len+=extendedBitmapLength;
+
+    //reserve space for phy configuration
+    packetfunctions_reserveHeaderSize(pkt,sizeof(uint32_t));
+
+    *((uint32_t*)(pkt->payload)) = phy_config;
+
+    len+=4;
+
+   //reserve space for number of channels
+   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
+
+   *((uint16_t*)(pkt->payload)) = number_of_channels;
+
+   len+=2;
+
+   //reserve space for channel page
+   packetfunctions_reserveHeaderSize(pkt,sizeof(uint8_t));
+
+    //todo set channel page
+    *((uint8_t*)(pkt->payload)) = channel_page;
+
+
+   len+=1;
+
 
    // reserve space for timeslot template ID
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint8_t));
    // write header
-   *((uint8_t*)(pkt->payload)) = CHANNELHOPPING_TEMPLATE_ID;
-   
+   *((uint8_t*)(pkt->payload)) = hopping_sequence_id;
+
    len+=1;
-   
+
    //===== MLME IE header
-   
+
    // reserve space
    packetfunctions_reserveHeaderSize(pkt, sizeof(mlme_IE_ht));
-   
+
    // prepare header
    mlme_subHeader.length_subID_type  = len;
-   mlme_subHeader.length_subID_type |= 
+   mlme_subHeader.length_subID_type |=
       IEEE802154E_MLME_CHANNELHOPPING_IE_SUBID << IEEE802154E_MLME_CHANNELHOPPING_IE_SUBID_SHIFT|
       IEEE802154E_DESC_TYPE_LONG;
-   
+
    // copy header
    pkt->payload[0] = mlme_subHeader.length_subID_type        & 0xFF;
    pkt->payload[1] = (mlme_subHeader.length_subID_type >> 8) & 0xFF;
-   
+
    len += 2;
-  
+
    return len;
 }
 
@@ -265,17 +343,17 @@ port_INLINE uint8_t processIE_prepend_sixSubIEHeader(
     //===== MLME IE header
     // reserve space
     packetfunctions_reserveHeaderSize(pkt, sizeof(mlme_IE_ht));
-   
+
     // prepare header
     mlme_subHeader.length_subID_type  = len;
-    mlme_subHeader.length_subID_type |= 
-        (IANA_6TOP_SUBIE_ID << MLME_IE_SUBID_SHIFT) | 
+    mlme_subHeader.length_subID_type |=
+        (IANA_6TOP_SUBIE_ID << MLME_IE_SUBID_SHIFT) |
         IEEE802154E_DESC_TYPE_SHORT;
-   
+
     // copy header
     pkt->payload[0] = mlme_subHeader.length_subID_type       & 0xFF;
     pkt->payload[1] = (mlme_subHeader.length_subID_type >> 8)& 0xFF;
-    
+
     return 2;
 }
 
@@ -285,32 +363,32 @@ port_INLINE uint8_t processIE_prepend_sixGeneralMessage(
     ){
     uint8_t    len = 0;
     uint8_t    temp8b;
-   
+
     //===== SFID
     packetfunctions_reserveHeaderSize(pkt,sizeof(uint8_t));
     *((uint8_t*)(pkt->payload)) = SFID_SF0;
     len += 1;
-    
+
     pkt->l2_sixtop_returnCode = code;
-  
+
     //===== version & code
     packetfunctions_reserveHeaderSize(pkt,sizeof(uint8_t));
     temp8b  = IANA_6TOP_6P_VERSION;
     temp8b |= code << 4;
     *((uint8_t*)(pkt->payload)) = temp8b;
     len += 1;
-   
+
     return len;
 }
 
 port_INLINE uint8_t processIE_prepend_sixSubID(OpenQueueEntry_t*    pkt){
     uint8_t    len = 0;
-   
+
     //===== SFID
     packetfunctions_reserveHeaderSize(pkt,sizeof(uint8_t));
     *((uint8_t*)(pkt->payload)) = IANA_6TOP_SUBIE_ID;
     len += 1;
-    
+
     return len;
 }
 
@@ -321,19 +399,19 @@ port_INLINE uint8_t processIE_prepend_sixCelllist(
     uint8_t    i;
     uint8_t    len;
     uint8_t    numOfCells;
-  
+
     len        = 0;
     numOfCells = 0;
-   
+
     //===== cell list
-   
+
     for(i=0;i<SCHEDULEIEMAXNUMCELLS;i++) {
         if(cellList[i].linkoptions != CELLTYPE_OFF){
             // cellobjects:
             // - [2B] slotOffset
             // - [2B] channelOffset
             // - [1B] link_type
-            packetfunctions_reserveHeaderSize(pkt,4); 
+            packetfunctions_reserveHeaderSize(pkt,4);
             pkt->payload[0] = (uint8_t)(cellList[i].tsNum  & 0x00FF);
             pkt->payload[1] = (uint8_t)((cellList[i].tsNum & 0xFF00)>>8);
             pkt->payload[2] = (uint8_t)(cellList[i].choffset  & 0x00FF);
@@ -342,11 +420,11 @@ port_INLINE uint8_t processIE_prepend_sixCelllist(
             numOfCells++;
         }
     }
-   
+
     // record the position of cellObjects
     pkt->l2_sixtop_numOfCells  = numOfCells;
     pkt->l2_sixtop_cellObjects = pkt->payload;
-   
+
     return len;
 }
 //===== retrieve IEs
@@ -359,62 +437,62 @@ port_INLINE void processIE_retrieveSlotframeLinkIE(
    uint8_t              i;
    uint8_t              j;
    uint8_t              localptr;
-   slotframeLink_IE_ht  sfInfo; 
+   slotframeLink_IE_ht  sfInfo;
    cellInfo_ht          linkInfo;
    open_addr_t          temp_neighbor;
    frameLength_t        oldFrameLength;
-   
-   localptr = *ptr; 
-  
+
+   localptr = *ptr;
+
    // number of slot frames 1B
    numSlotFrames = *((uint8_t*)(pkt->payload)+localptr);
    localptr++;
-   
+
    schedule_setFrameNumber(numSlotFrames);
 
    // for each slotframe
    i=0;
    while(i < numSlotFrames){
-      
+
       // [1B] slotftramehandle 1B
       sfInfo.slotframehandle =*((uint8_t*)(pkt->payload)+localptr);
       localptr++;
-      
+
       schedule_setFrameHandle(sfInfo.slotframehandle);
-      
+
       // [2B] slotframe size
       sfInfo.slotframesize   = *((uint8_t*)(pkt->payload)+localptr);
       localptr++;
       sfInfo.slotframesize  |= (*((uint8_t*)(pkt->payload)+localptr))<<8;
       localptr++;;
-      
+
       oldFrameLength = schedule_getFrameLength();
       schedule_setFrameLength(sfInfo.slotframesize);
-      
+
       // [1B] number of links
       sfInfo.numlinks        = *((uint8_t*)(pkt->payload)+localptr);
       localptr++;
-      
+
       if (oldFrameLength == 0) {
-         
+
          for (j=0;j<sfInfo.numlinks;j++){
-            
+
             // [2B] TimeSlot
             linkInfo.tsNum = *((uint8_t*)(pkt->payload)+localptr);
             localptr++;
             linkInfo.tsNum  |= (*((uint8_t*)(pkt->payload)+localptr))<<8;
             localptr++;
-            
+
             // [2B] Ch.Offset
             linkInfo.choffset = *((uint8_t*)(pkt->payload)+localptr);
             localptr++;
             linkInfo.choffset  |= (*((uint8_t*)(pkt->payload)+localptr))<<8;
             localptr++;
-            
+
             // [1B] LinkOption bitmap
             linkInfo.linkoptions = *((uint8_t*)(pkt->payload)+localptr);
             localptr++;
-            
+
             // shared TXRX anycast slot(s)
             memset(&temp_neighbor,0,sizeof(temp_neighbor));
             temp_neighbor.type             = ADDR_ANYCAST;
@@ -430,9 +508,9 @@ port_INLINE void processIE_retrieveSlotframeLinkIE(
       i++;
       break; //TODO: this break is put since a single slotframe is managed
    }
-   
+
    *ptr=localptr;
-} 
+}
 
 port_INLINE void processIE_retrieve_sixCelllist(
     OpenQueueEntry_t*   pkt,
