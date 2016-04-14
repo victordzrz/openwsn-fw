@@ -534,6 +534,60 @@ port_INLINE void processIE_retrieve_sixCelllist(
     }
 }
 
+port_INLINE void processIE_retrieveChannelHoppingIE(
+    OpenQueueEntry_t* pkt,
+    uint8_t           *ptr){
+
+   //Hopping IE values
+   uint8_t hopping_sequence_id;
+   uint8_t channel_page;
+   uint16_t number_of_channels;
+   uint32_t phy_config;
+   uint16_t sequence_length;
+   uint8_t sequence_list[MAX_CH_TEMPLATE_LENGTH];
+   uint16_t current_hop;
+   uint8_t extendedBitmapLength;
+   uint8_t localptr = *ptr;
+
+   //Get hopping sequence ID
+   hopping_sequence_id=*((uint8_t*)(pkt->payload)+localptr);
+   localptr++;
+
+   //Get channel page
+   channel_page=*((uint8_t*)(pkt->payload)+localptr);
+   localptr++;
+
+   //Get number of channels
+   number_of_channels=*((uint8_t*)(pkt->payload)+localptr);
+   number_of_channels|= (*((uint8_t*)(pkt->payload)+localptr+1))<<8;
+   localptr+=2;
+
+   //Get phy config
+   phy_config=*((uint8_t*)(pkt->payload)+localptr);
+   phy_config|= (*((uint8_t*)(pkt->payload)+localptr+1))<<8;
+   phy_config|= (*((uint8_t*)(pkt->payload)+localptr+2))<<16;
+   phy_config|= (*((uint8_t*)(pkt->payload)+localptr+3))<<24;
+
+   //TODO calculate extendedBitmapLength, leave it to 0 now
+
+   //Get hopping sequence length
+   sequence_length=*((uint8_t*)(pkt->payload)+localptr);
+   sequence_length|= (*((uint8_t*)(pkt->payload)+localptr+1))<<8;
+   localptr+=2;
+
+   memcpy(sequence_list,
+         (uint8_t*)(pkt->payload)+localptr,
+          sequence_length);
+   localptr+=sequence_length;
+
+   current_hop=*((uint8_t*)(pkt->payload)+localptr);
+   current_hop|= (*((uint8_t*)(pkt->payload)+localptr+1))<<8;
+   localptr+=2;
+
+   ieee154e_setHoppingSequence(sequence_list,sequence_length,hopping_sequence_id);
+
+   *ptr=localptr;
+}
 
 void printHoppingTemplate(uint8_t* sequence, uint16_t length){
   uint8_t sequenceMessage[30];
