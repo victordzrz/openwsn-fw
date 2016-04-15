@@ -242,12 +242,12 @@ port_INLINE uint8_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
                                &sequence_length,
                                &hopping_sequence_id);
    //prepare IE
-   channel_page=1;
+   channel_page=0;
    number_of_channels=16;
-   phy_config=36500;
+   phy_config=0;
    //todo Calculate extendedBitmapLength
    extendedBitmapLength=0;
-   current_hop=1;
+   current_hop=0;
 
    printHoppingTemplate(sequence_list,sequence_length);
 
@@ -587,13 +587,9 @@ port_INLINE void processIE_retrieveChannelHoppingIE(
    current_hop|= (*((uint8_t*)(pkt->payload)+localptr+1))<<8;
    localptr+=2;
 
-   uint8_t sequenceMessage[30];
-
    ieee154e_setHoppingSequence(sequence_list,sequence_length,hopping_sequence_id);
 
    *ptr=localptr;
-
-   printHoppingTemplate(sequence_list,sequence_length);
 }
 
 void printHoppingTemplate(uint8_t* sequence, uint16_t length){

@@ -126,6 +126,7 @@ typedef struct{
    cellInfo_ht     cellList[SCHEDULEIEMAXNUMCELLS];
 } schedule_IE_ht;
 
+END_PACK
 
 
 //=========================== variables =======================================
