@@ -16,7 +16,7 @@
 
 port_INLINE void processIE_prependMLMEIE(
       OpenQueueEntry_t* pkt,
-      uint8_t           len
+      uint16_t           len
    ){
    payload_IE_ht payload_IE_desc;
 
@@ -101,6 +101,11 @@ port_INLINE uint8_t processIE_prependSyncIE(OpenQueueEntry_t* pkt){
 
    len += 2;
 
+   openserial_messageAppendBuffer("+%",2);
+   openserial_messageAppend(len);
+   openserial_messageAppend('%');
+   openserial_messageFlush();
+
    return len;
 }
 
@@ -174,6 +179,10 @@ port_INLINE uint8_t processIE_prependSlotframeLinkIE(OpenQueueEntry_t* pkt){
 
    len+=2;
 
+   openserial_messageAppendBuffer("+%",2);
+   openserial_messageAppend(len);
+   openserial_messageAppend('%');
+   openserial_messageFlush();
    return len;
 }
 
@@ -222,10 +231,16 @@ port_INLINE uint8_t processIE_prependTSCHTimeslotIE(OpenQueueEntry_t* pkt){
 
    len += 2;
 
+   openserial_messageAppendBuffer("+%",2);
+   openserial_messageAppend(len);
+   openserial_messageAppend('%');
+   openserial_messageFlush();
+
    return len;
 }
-port_INLINE uint8_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
-   uint8_t    len;
+port_INLINE uint16_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
+   uint16_t sequence_index=0;
+   uint16_t    len;
    uint8_t extendedBitmapLength;
    mlme_IE_ht mlme_subHeader;
 
@@ -254,32 +269,33 @@ port_INLINE uint8_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
 
    len = 0;
 
+
    //reserve space for current hop
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
 
-
-   *((uint16_t*)(pkt->payload)) = current_hop;
+   pkt->payload[0] = (uint8_t)(current_hop & 0x00ff);
+   pkt->payload[1] = (uint8_t)((current_hop>>8) & 0x00ff);
 
    len+=2;
+
 
    //reserve space for hopping sequence
    packetfunctions_reserveHeaderSize(pkt,sizeof(sequence_length));
 
-   memcpy(
-       pkt->payload,
-       sequence_list,
-       sequence_length
-   );
-
-   len+=sequence_length;
+   for(sequence_index=0;sequence_index<sequence_length;sequence_index++){
+      pkt->payload[sequence_index]=sequence_list[sequence_index];
+      len++;
+   }
 
 
    //reserve space for hopping sequence length
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
 
-   *((uint16_t*)(pkt->payload)) = sequence_length;
+   pkt->payload[0] = (uint8_t)(sequence_length & 0x00ff);
+   pkt->payload[1] = (uint8_t)((sequence_length>>8) & 0x00ff);
 
    len+=2;
+
 
 
     //TODO extended bitmap length=0
@@ -288,16 +304,23 @@ port_INLINE uint8_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
     //reserve space for phy configuration
     packetfunctions_reserveHeaderSize(pkt,sizeof(uint32_t));
 
-    *((uint32_t*)(pkt->payload)) = phy_config;
+    pkt->payload[0] = (uint8_t)(phy_config & 0x00ff);
+    pkt->payload[1] = (uint8_t)((phy_config>>8) & 0x00ff);
+    pkt->payload[2] = (uint8_t)((phy_config>>16) & 0x00ff);
+    pkt->payload[3] = (uint8_t)((phy_config>>24) & 0x00ff);
+
 
     len+=4;
+
 
    //reserve space for number of channels
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
 
-   *((uint16_t*)(pkt->payload)) = number_of_channels;
+   pkt->payload[0] = (uint8_t)(number_of_channels & 0x00ff);
+   pkt->payload[1] = (uint8_t)((number_of_channels>>8) & 0x00ff);
 
    len+=2;
+
 
    //reserve space for channel page
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint8_t));
@@ -332,6 +355,11 @@ port_INLINE uint8_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
    pkt->payload[1] = (mlme_subHeader.length_subID_type >> 8) & 0xFF;
 
    len += 2;
+
+   openserial_messageAppendBuffer("+%",2);
+   openserial_messageAppendBuffer(&len,2);
+   openserial_messageAppend('%');
+   openserial_messageFlush();
 
    return len;
 }
@@ -588,7 +616,6 @@ port_INLINE void processIE_retrieveChannelHoppingIE(
    localptr+=2;
 
    ieee154e_setHoppingSequence(sequence_list,sequence_length,hopping_sequence_id);
-
    *ptr=localptr;
 }
 

@@ -735,17 +735,18 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
                // long sub-IE
                sublen   = temp_16b & IEEE802154E_DESC_LEN_LONG_MLME_IE_MASK;
                subid    = (temp_16b & IEEE802154E_DESC_SUBID_LONG_MLME_IE_MASK)>>IEEE802154E_DESC_SUBID_LONG_MLME_IE_SHIFT;
+               //sublen=28;
             } else {
                // short sub-IE
                sublen   = temp_16b & IEEE802154E_DESC_LEN_SHORT_MLME_IE_MASK;
                subid    = (temp_16b & IEEE802154E_DESC_SUBID_SHORT_MLME_IE_MASK)>>IEEE802154E_DESC_SUBID_SHORT_MLME_IE_SHIFT;
             }
 
-
             switch(subid){
 
                case IEEE802154E_MLME_SYNC_IE_SUBID:
                   // Sync IE: ASN and Join Priority
+                  openserial_printMessage("sync",4);
 
                   if (idmanager_getIsDAGroot()==FALSE) {
                      // ASN
@@ -761,12 +762,15 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
                   break;
 
                case IEEE802154E_MLME_SLOTFRAME_LINK_IE_SUBID:
+
+                  openserial_printMessage("fram",4);
                   if ((idmanager_getIsDAGroot()==FALSE) && (ieee154e_isSynch()==FALSE)) {
                      processIE_retrieveSlotframeLinkIE(pkt,&ptr);
                   }
                   break;
 
                case IEEE802154E_MLME_TIMESLOT_IE_SUBID:
+                  openserial_printMessage("time",4);
                   if (idmanager_getIsDAGroot()==FALSE) {
                       // timelsot template ID
                       timeslotTemplateIDStoreFromEB(*((uint8_t*)(pkt->payload)+ptr));
@@ -781,19 +785,44 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
                   break;
 
                case IEEE802154E_MLME_CHANNELHOPPING_IE_SUBID:
+                  openserial_printMessage("chan",4);
                   if (idmanager_getIsDAGroot()==FALSE) {
+                      openserial_messageAppendBuffer("pb%",3);
+                      openserial_messageAppend(ptr);
+                      openserial_messageAppend('%');
+                      openserial_messageFlush();
                       processIE_retrieveChannelHoppingIE(pkt,&ptr);
                       printHoppingTemplate(ieee154e_vars.chTemplate,ieee154e_vars.chTemplateLength);
-                      //ptr+=28;
+                      openserial_messageAppendBuffer("pa%",3);
+                      openserial_messageAppend(ptr);
+                      openserial_messageAppend('%');
+                      openserial_messageFlush();
                   }
                   break;
                default:
+                  //openserial_messageAppendBuffer("i%",2);
+                  //openserial_messageAppendBuffer(&subid,2);
+                  //openserial_messageAppend('%');
+                  //openserial_messageAppendBuffer(" sl%",4);
+                  //openserial_messageAppendBuffer(&sublen,2);
+                  //openserial_messageAppend('%');
+                  //openserial_messageFlush();
+                  //openserial_messageAppendBuffer("FALSE",2);
+                  //openserial_messageFlush();
                   return FALSE;
                   break;
             }
 
+
             len = len - sublen;
+            //openserial_messageAppendBuffer("l%",2);
+            //openserial_messageAppendBuffer(&len,2);
+            //openserial_messageAppend('%');
+            //openserial_messageFlush();
+
          } while(len>0);
+         openserial_messageAppendBuffer("l0",2);
+         openserial_messageFlush();
          if (f_asn2slotoffset == TRUE) {
             // at this point, ASN and frame length are known
             // the current slotoffset can be inferred

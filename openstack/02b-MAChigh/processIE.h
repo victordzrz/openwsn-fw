@@ -135,7 +135,7 @@ END_PACK
 
 void             processIE_prependMLMEIE(
    OpenQueueEntry_t*    pkt,
-   uint8_t              len
+   uint16_t              len
 );
 void             processIE_prepend_sixtopIE(
    OpenQueueEntry_t*    pkt,
@@ -152,7 +152,7 @@ uint8_t          processIE_prependSlotframeLinkIE(
 uint8_t          processIE_prependTSCHTimeslotIE(
     OpenQueueEntry_t*    pkt
 );
-uint8_t          processIE_prependChannelHoppingIE(
+uint16_t          processIE_prependChannelHoppingIE(
     OpenQueueEntry_t*    pkt
 );
 uint8_t          processIE_prepend_sixSubIEHeader(

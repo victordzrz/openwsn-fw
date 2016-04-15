@@ -717,7 +717,7 @@ readability of the code.
 */
 port_INLINE void sixtop_sendEB() {
    OpenQueueEntry_t* eb;
-   uint8_t len;
+   uint16_t len;
 
    len = 0;
 
@@ -756,10 +756,30 @@ port_INLINE void sixtop_sendEB() {
 
    // reserve space for EB-specific header
    // reserving for IEs.
+   openserial_messageAppendBuffer("lb%",3);
+   openserial_messageAppendBuffer(&len,2);
+   openserial_messageAppend('%');
+   openserial_messageFlush();
    len += processIE_prependSlotframeLinkIE(eb);
-   len += processIE_prependChannelHoppingIE(eb);
+   openserial_messageAppendBuffer("lf%",3);
+   openserial_messageAppendBuffer(&len,2);
+   openserial_messageAppend('%');
+   openserial_messageFlush();
    len += processIE_prependTSCHTimeslotIE(eb);
+   openserial_messageAppendBuffer("lt%",3);
+   openserial_messageAppendBuffer(&len,2);
+   openserial_messageAppend('%');
+   openserial_messageFlush();
+   len += processIE_prependChannelHoppingIE(eb);
+   openserial_messageAppendBuffer("lc%",3);
+   openserial_messageAppendBuffer(&len,2);
+   openserial_messageAppend('%');
+   openserial_messageFlush();
    len += processIE_prependSyncIE(eb);
+   openserial_messageAppendBuffer("ls%",3);
+   openserial_messageAppendBuffer(&len,2);
+   openserial_messageAppend('%');
+   openserial_messageFlush();
 
    //add IE header
    processIE_prependMLMEIE(eb,len);
