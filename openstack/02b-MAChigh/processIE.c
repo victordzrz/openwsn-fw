@@ -589,7 +589,7 @@ port_INLINE void processIE_retrieveChannelHoppingIE(
 
    uint8_t sequenceMessage[30];
 
-   //ieee154e_setHoppingSequence(sequence_list,sequence_length,hopping_sequence_id);
+   ieee154e_setHoppingSequence(sequence_list,sequence_length,hopping_sequence_id);
 
    *ptr=localptr;
 
