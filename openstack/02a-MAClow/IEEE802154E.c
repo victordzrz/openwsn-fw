@@ -730,17 +730,17 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
 
             len         = len - 2; //remove header fields len
 
+
             if ((temp_16b & IEEE802154E_DESC_TYPE_LONG) == IEEE802154E_DESC_TYPE_LONG){
                // long sub-IE
-
                sublen   = temp_16b & IEEE802154E_DESC_LEN_LONG_MLME_IE_MASK;
                subid    = (temp_16b & IEEE802154E_DESC_SUBID_LONG_MLME_IE_MASK)>>IEEE802154E_DESC_SUBID_LONG_MLME_IE_SHIFT;
             } else {
                // short sub-IE
-
                sublen   = temp_16b & IEEE802154E_DESC_LEN_SHORT_MLME_IE_MASK;
                subid    = (temp_16b & IEEE802154E_DESC_SUBID_SHORT_MLME_IE_MASK)>>IEEE802154E_DESC_SUBID_SHORT_MLME_IE_SHIFT;
             }
+
 
             switch(subid){
 
@@ -762,7 +762,7 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
 
                case IEEE802154E_MLME_SLOTFRAME_LINK_IE_SUBID:
                   if ((idmanager_getIsDAGroot()==FALSE) && (ieee154e_isSynch()==FALSE)) {
-                     processIE_retrieveSlotframeLinkIE(pkt,&ptr);
+                     processIE_retrieveSlotframeLinkIE(pkt,ptr);
                   }
                   break;
 
@@ -782,7 +782,8 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
 
                case IEEE802154E_MLME_CHANNELHOPPING_IE_SUBID:
                   if (idmanager_getIsDAGroot()==FALSE) {
-                      processIE_retrieveChannelHoppingIE(pkt,ptr);
+                      processIE_retrieveChannelHoppingIE(pkt,&ptr);
+                      //ptr+=28;
                   }
                   break;
                default:
@@ -2000,6 +2001,7 @@ void ieee154e_setSlotDuration(uint16_t duration){
 
 uint16_t ieee154e_getSlotDuration(){
     return ieee154e_vars.slotDuration;
+
 }
 
 // timeslot template handling

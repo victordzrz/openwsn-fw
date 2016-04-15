@@ -185,7 +185,7 @@ void            processIE_retrieve_sixCelllist(
 
 void          processIE_retrieveChannelHoppingIE(
     OpenQueueEntry_t*   pkt,
-    uint8_t             *ptr
+    uint8_t*             ptr
 );
 
 

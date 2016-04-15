@@ -167,6 +167,7 @@ port_INLINE uint8_t processIE_prependSlotframeLinkIE(OpenQueueEntry_t* pkt){
          IEEE802154E_MLME_SLOTFRAME_LINK_IE_SUBID_SHIFT) |
       IEEE802154E_DESC_TYPE_SHORT;
 
+
    // copy header
    pkt->payload[0]= mlme_subHeader.length_subID_type        & 0xFF;
    pkt->payload[1]= (mlme_subHeader.length_subID_type >> 8) & 0xFF;
@@ -241,12 +242,12 @@ port_INLINE uint8_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
                                &sequence_length,
                                &hopping_sequence_id);
    //prepare IE
-   channel_page=0;
+   channel_page=1;
    number_of_channels=16;
-   phy_config=0;
+   phy_config=36500;
    //todo Calculate extendedBitmapLength
    extendedBitmapLength=0;
-   current_hop=0;
+   current_hop=1;
 
    printHoppingTemplate(sequence_list,sequence_length);
 
@@ -536,7 +537,7 @@ port_INLINE void processIE_retrieve_sixCelllist(
 
 port_INLINE void processIE_retrieveChannelHoppingIE(
     OpenQueueEntry_t* pkt,
-    uint8_t           *ptr){
+    uint8_t*           ptr){
 
    //Hopping IE values
    uint8_t hopping_sequence_id;
@@ -568,6 +569,8 @@ port_INLINE void processIE_retrieveChannelHoppingIE(
    phy_config|= (*((uint8_t*)(pkt->payload)+localptr+2))<<16;
    phy_config|= (*((uint8_t*)(pkt->payload)+localptr+3))<<24;
 
+   localptr+=4;
+
    //TODO calculate extendedBitmapLength, leave it to 0 now
 
    //Get hopping sequence length
@@ -584,9 +587,13 @@ port_INLINE void processIE_retrieveChannelHoppingIE(
    current_hop|= (*((uint8_t*)(pkt->payload)+localptr+1))<<8;
    localptr+=2;
 
-   ieee154e_setHoppingSequence(sequence_list,sequence_length,hopping_sequence_id);
+   uint8_t sequenceMessage[30];
+
+   //ieee154e_setHoppingSequence(sequence_list,sequence_length,hopping_sequence_id);
 
    *ptr=localptr;
+
+   printHoppingTemplate(sequence_list,sequence_length);
 }
 
 void printHoppingTemplate(uint8_t* sequence, uint16_t length){
