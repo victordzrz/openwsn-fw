@@ -101,11 +101,6 @@ port_INLINE uint8_t processIE_prependSyncIE(OpenQueueEntry_t* pkt){
 
    len += 2;
 
-   openserial_messageAppendBuffer("+%",2);
-   openserial_messageAppend(len);
-   openserial_messageAppend('%');
-   openserial_messageFlush();
-
    return len;
 }
 
@@ -179,10 +174,7 @@ port_INLINE uint8_t processIE_prependSlotframeLinkIE(OpenQueueEntry_t* pkt){
 
    len+=2;
 
-   openserial_messageAppendBuffer("+%",2);
-   openserial_messageAppend(len);
-   openserial_messageAppend('%');
-   openserial_messageFlush();
+
    return len;
 }
 
@@ -231,10 +223,6 @@ port_INLINE uint8_t processIE_prependTSCHTimeslotIE(OpenQueueEntry_t* pkt){
 
    len += 2;
 
-   openserial_messageAppendBuffer("+%",2);
-   openserial_messageAppend(len);
-   openserial_messageAppend('%');
-   openserial_messageFlush();
 
    return len;
 }
@@ -280,7 +268,7 @@ port_INLINE uint16_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
 
 
    //reserve space for hopping sequence
-   packetfunctions_reserveHeaderSize(pkt,sizeof(sequence_length));
+   packetfunctions_reserveHeaderSize(pkt,sequence_length);
 
    for(sequence_index=0;sequence_index<sequence_length;sequence_index++){
       pkt->payload[sequence_index]=sequence_list[sequence_index];
@@ -334,7 +322,8 @@ port_INLINE uint16_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
 
    // reserve space for timeslot template ID
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint8_t));
-   // write header
+
+  //  // write header
    *((uint8_t*)(pkt->payload)) = hopping_sequence_id;
 
    len+=1;
@@ -356,10 +345,6 @@ port_INLINE uint16_t processIE_prependChannelHoppingIE(OpenQueueEntry_t* pkt){
 
    len += 2;
 
-   openserial_messageAppendBuffer("+%",2);
-   openserial_messageAppendBuffer(&len,2);
-   openserial_messageAppend('%');
-   openserial_messageFlush();
 
    return len;
 }

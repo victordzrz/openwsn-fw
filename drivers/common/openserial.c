@@ -24,7 +24,7 @@
 //=========================== variables =======================================
 
 openserial_vars_t openserial_vars;
-uint8_t openserial_message[20];
+uint8_t openserial_message[100];
 uint8_t openserial_messagePointer;
 
 //=========================== prototypes ======================================
@@ -505,7 +505,7 @@ void openserial_stop() {
             break;
       }
    }
-   
+
    DISABLE_INTERRUPTS();
    openserial_vars.inputBufFill  = 0;
    openserial_vars.busyReceiving = FALSE;
@@ -525,12 +525,12 @@ void openserial_goldenImageCommands(void){
    uint16_t comandParam_16;
    cellInfo_ht cellList[SCHEDULEIEMAXNUMCELLS];
    uint8_t  i;
-   
+
    open_addr_t neighbor;
    bool        foundNeighbor;
-   
+
    memset(cellList,0,sizeof(cellList));
-   
+
    numDataBytes = openserial_getNumDataBytes();
    //copying the buffer
    openserial_getInputBuffer(&(input_buffer[0]),numDataBytes);
@@ -543,8 +543,8 @@ void openserial_goldenImageCommands(void){
       // log this info and return
       return;
    }
-   
-#ifdef GOLDEN_IMAGE_ROOT 
+
+#ifdef GOLDEN_IMAGE_ROOT
    if ( type != GD_TYPE_ROOT ){
        // image type is wrong
        return;
@@ -558,7 +558,7 @@ void openserial_goldenImageCommands(void){
 #endif
    commandId  = openserial_vars.inputBuf[3];
    commandLen = openserial_vars.inputBuf[4];
-   
+
    if (commandLen>3) {
        // the max command Len is 2, except ping commands
        return;
@@ -635,20 +635,20 @@ void openserial_goldenImageCommands(void){
             if (foundNeighbor==FALSE) {
                 break;
             }
-             
+
             sixtop_setHandler(SIX_HANDLER_OTF);
-            if ( 
+            if (
                 (
                   commandId != COMMAND_SET_6P_ADD &&
                   commandId != COMMAND_SET_6P_DELETE
                 ) ||
                 (
-                    ( 
+                    (
                       commandId == COMMAND_SET_6P_ADD ||
                       commandId == COMMAND_SET_6P_DELETE
-                    ) && 
+                    ) &&
                     commandLen == 0
-                ) 
+                )
             ){
                 // randommly select cell
                 sixtop_request(commandId-8,&neighbor,1);
@@ -671,7 +671,7 @@ void openserial_goldenImageCommands(void){
                 if (comandParam_8 == 0) {
                     sixtop_setIsResponseEnabled(FALSE);
                 } else {
-                    // security only can be 1 or 0 
+                    // security only can be 1 or 0
                     break;
                 }
             }

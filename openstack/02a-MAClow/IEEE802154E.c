@@ -685,7 +685,11 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
    // flag used for understanding if the slotoffset should be inferred from both ASN and slotframe length
    bool                  f_asn2slotoffset;
    uint8_t               i; // used for find the index in channel hopping template
+   uint8_t newPtr;
+   uint8_t counter;
 
+
+   //counter=0;
    ptr=0;
 
    // payload IE header, header IE is processed before when retrieve header
@@ -722,7 +726,8 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
          f_asn2slotoffset = FALSE;
          do {
 
-            //read sub IE header
+            //read sub IE headerq
+
             temp_8b     = *((uint8_t*)(pkt->payload)+ptr);
             ptr         = ptr + 1;
             temp_16b    = temp_8b  + ((*((uint8_t*)(pkt->payload)+ptr))<<8);
@@ -742,12 +747,29 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
                subid    = (temp_16b & IEEE802154E_DESC_SUBID_SHORT_MLME_IE_MASK)>>IEEE802154E_DESC_SUBID_SHORT_MLME_IE_SHIFT;
             }
 
+
+
+            switch(subid){
+              case IEEE802154E_MLME_SYNC_IE_SUBID:
+                openserial_printMessage("sync",4);
+                break;
+              case IEEE802154E_MLME_SLOTFRAME_LINK_IE_SUBID:
+                openserial_printMessage("fram",4);
+                break;
+              case IEEE802154E_MLME_TIMESLOT_IE_SUBID:
+                openserial_printMessage("tslo",4);
+                break;
+              case IEEE802154E_MLME_CHANNELHOPPING_IE_SUBID:
+                openserial_printMessage("chan",4);
+                break;
+              default:
+                break;
+            }
+
             switch(subid){
 
                case IEEE802154E_MLME_SYNC_IE_SUBID:
                   // Sync IE: ASN and Join Priority
-                  openserial_printMessage("sync",4);
-
                   if (idmanager_getIsDAGroot()==FALSE) {
                      // ASN
                      asnStoreFromEB((uint8_t*)(pkt->payload)+ptr);
@@ -762,16 +784,13 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
                   break;
 
                case IEEE802154E_MLME_SLOTFRAME_LINK_IE_SUBID:
-
-                  openserial_printMessage("fram",4);
                   if ((idmanager_getIsDAGroot()==FALSE) && (ieee154e_isSynch()==FALSE)) {
                      processIE_retrieveSlotframeLinkIE(pkt,&ptr);
                   }
                   break;
 
                case IEEE802154E_MLME_TIMESLOT_IE_SUBID:
-                  openserial_printMessage("time",4);
-                  if (idmanager_getIsDAGroot()==FALSE) {
+                      if (idmanager_getIsDAGroot()==FALSE) {
                       // timelsot template ID
                       timeslotTemplateIDStoreFromEB(*((uint8_t*)(pkt->payload)+ptr));
                       ptr = ptr + 1;
@@ -785,44 +804,20 @@ port_INLINE bool ieee154e_processIEs(OpenQueueEntry_t* pkt, uint16_t* lenIE) {
                   break;
 
                case IEEE802154E_MLME_CHANNELHOPPING_IE_SUBID:
-                  openserial_printMessage("chan",4);
                   if (idmanager_getIsDAGroot()==FALSE) {
-                      openserial_messageAppendBuffer("pb%",3);
-                      openserial_messageAppend(ptr);
-                      openserial_messageAppend('%');
-                      openserial_messageFlush();
                       processIE_retrieveChannelHoppingIE(pkt,&ptr);
                       printHoppingTemplate(ieee154e_vars.chTemplate,ieee154e_vars.chTemplateLength);
-                      openserial_messageAppendBuffer("pa%",3);
-                      openserial_messageAppend(ptr);
-                      openserial_messageAppend('%');
-                      openserial_messageFlush();
                   }
                   break;
                default:
-                  //openserial_messageAppendBuffer("i%",2);
-                  //openserial_messageAppendBuffer(&subid,2);
-                  //openserial_messageAppend('%');
-                  //openserial_messageAppendBuffer(" sl%",4);
-                  //openserial_messageAppendBuffer(&sublen,2);
-                  //openserial_messageAppend('%');
-                  //openserial_messageFlush();
-                  //openserial_messageAppendBuffer("FALSE",2);
-                  //openserial_messageFlush();
                   return FALSE;
                   break;
             }
 
 
             len = len - sublen;
-            //openserial_messageAppendBuffer("l%",2);
-            //openserial_messageAppendBuffer(&len,2);
-            //openserial_messageAppend('%');
-            //openserial_messageFlush();
 
          } while(len>0);
-         openserial_messageAppendBuffer("l0",2);
-         openserial_messageFlush();
          if (f_asn2slotoffset == TRUE) {
             // at this point, ASN and frame length are known
             // the current slotoffset can be inferred
@@ -931,15 +926,6 @@ port_INLINE void activity_ti1ORri1() {
 
    // check the schedule to see what type of slot this is
    cellType = schedule_getType();
-  //memcpy(ieee154e_message,"a%0%",4);
-  //openserial_messagePutHex(ieee154e_message,1,ieee154e_vars.asn.bytes0and1 & 0xFF);
-  //openserial_printMessage(ieee154e_message,4);
-  //memcpy(ieee154e_message,"o%0%",4);
-  //openserial_messagePutHex(ieee154e_message,1,ieee154e_vars.asnOffset);
-  //openserial_printMessage(ieee154e_message,4);
-  //memcpy(ieee154e_message,"s%0%",4);
-  //openserial_messagePutHex(ieee154e_message,1,ieee154e_vars.slotOffset);
-  //openserial_printMessage(ieee154e_message,4);
    switch (cellType) {
       case CELLTYPE_TXRX:
       case CELLTYPE_TX:
@@ -962,11 +948,7 @@ port_INLINE void activity_ti1ORri1() {
                // abort
                //endSlot();
                //send dummy
-               //openserial_printMessage("SDUMMY",6);
                ieee154e_vars.dataToSend=dummy_getPacket(&neighbor);
-               //memcpy(ieee154e_message,"MS/%0%",6);
-               //openserial_messagePutHex(ieee154e_message,3,(ieee154e_vars.dataToSend)->length);
-               //openserial_printMessage(ieee154e_message,6);
                changeState(S_TXDATAOFFSET);
                // change owner
                ieee154e_vars.dataToSend->owner = COMPONENT_IEEE802154E;

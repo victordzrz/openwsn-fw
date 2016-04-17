@@ -717,9 +717,10 @@ readability of the code.
 */
 port_INLINE void sixtop_sendEB() {
    OpenQueueEntry_t* eb;
-   uint16_t len;
+   uint16_t len,newLen;
 
    len = 0;
+
 
    if ((ieee154e_isSynch()==FALSE) || (neighbors_getMyDAGrank()==DEFAULTDAGRANK)){
       // I'm not sync'ed or I did not acquire a DAGrank
@@ -755,34 +756,64 @@ port_INLINE void sixtop_sendEB() {
    eb->owner   = COMPONENT_SIXTOP;
 
    // reserve space for EB-specific header
-   // reserving for IEs.
-   openserial_messageAppendBuffer("lb%",3);
-   openserial_messageAppendBuffer(&len,2);
+   // reserving for IEss
+
+
+   newLen=processIE_prependSlotframeLinkIE(eb);
+   len += newLen;
+   openserial_messageAppendBuffer("fram%",5);
+   openserial_messageAppendBuffer(eb->payload,len);
    openserial_messageAppend('%');
    openserial_messageFlush();
-   len += processIE_prependSlotframeLinkIE(eb);
-   openserial_messageAppendBuffer("lf%",3);
-   openserial_messageAppendBuffer(&len,2);
-   openserial_messageAppend('%');
-   openserial_messageFlush();
-   len += processIE_prependTSCHTimeslotIE(eb);
-   openserial_messageAppendBuffer("lt%",3);
-   openserial_messageAppendBuffer(&len,2);
-   openserial_messageAppend('%');
-   openserial_messageFlush();
-   len += processIE_prependChannelHoppingIE(eb);
-   openserial_messageAppendBuffer("lc%",3);
-   openserial_messageAppendBuffer(&len,2);
-   openserial_messageAppend('%');
-   openserial_messageFlush();
-   len += processIE_prependSyncIE(eb);
-   openserial_messageAppendBuffer("ls%",3);
-   openserial_messageAppendBuffer(&len,2);
-   openserial_messageAppend('%');
-   openserial_messageFlush();
+  //  openserial_messageAppendBuffer("l%",2);
+  //  openserial_messageAppendBuffer(&len,1);
+  //  openserial_messageAppend('%');
+  //  openserial_messageFlush();
+
+   newLen = processIE_prependChannelHoppingIE(eb);
+   len +=newLen;
+  //  openserial_messageAppendBuffer("chan%",5);
+  //  openserial_messageAppendBuffer(eb->payload+20,len);
+  //  openserial_messageAppend('%');
+  //  openserial_messageFlush();
+  //openserial_messageAppendBuffer("l%",2);
+  //  openserial_messageAppendBuffer(&len,1);
+  //  openserial_messageAppend('%');
+  //  openserial_messageFlush();
+
+   newLen = processIE_prependTSCHTimeslotIE(eb);
+   len +=newLen;
+  //  openserial_messageAppendBuffer("tsch%",5);
+  //  openserial_messageAppendBuffer(eb->payload,newLen);
+  //  openserial_messageAppend('%');
+  //  openserial_messageFlush();
+  // openserial_messageAppendBuffer("l%",2);
+  // openserial_messageAppendBuffer(&len,1);
+  // openserial_messageAppend('%');
+  // openserial_messageFlush();
+
+
+   newLen = processIE_prependSyncIE(eb);
+   len +=newLen;
+  //  openserial_messageAppendBuffer("sync%",5);
+  //  openserial_messageAppendBuffer(eb->payload,newLen);
+  //  openserial_messageAppend('%');
+  //  openserial_messageFlush();
+  // openserial_messageAppendBuffer("l%",2);
+  // openserial_messageAppendBuffer(&len,1);
+  // openserial_messageAppend('%');
+  // openserial_messageFlush();
 
    //add IE header
    processIE_prependMLMEIE(eb,len);
+  //  openserial_messageAppendBuffer("l%",2);
+  //  openserial_messageAppend(pkt->length);
+  //  openserial_messageAppend('%');
+  //  openserial_messageFlush();
+  //  openserial_messageAppendBuffer("a%",2);
+  //  openserial_messageAppendBuffer(pkt->payload+20,pkt->length);
+  //  openserial_messageAppend('%');
+  //  openserial_messageFlush();
 
    // some l2 information about this packet
    eb->l2_frameType                     = IEEE154_TYPE_BEACON;
